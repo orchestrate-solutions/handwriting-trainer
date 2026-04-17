@@ -83,6 +83,15 @@ function bindButtons() {
   document.getElementById('btn-next').addEventListener('click', () => {
     selectLetter((currentLetterIdx + 1) % 26);
   });
+
+  // Size slider
+  const slider = document.getElementById('size-slider');
+  const sizeValue = document.getElementById('size-value');
+  slider.addEventListener('input', () => {
+    const pct = parseInt(slider.value, 10);
+    sizeValue.textContent = pct + '%';
+    canvas.setScale(pct / 100);
+  });
 }
 
 function bindKeyboard() {

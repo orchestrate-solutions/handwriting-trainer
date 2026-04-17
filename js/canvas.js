@@ -15,6 +15,9 @@ export class DrawingCanvas {
     this.isDrawing = false;
     this.activePenId = null;   // for palm rejection
 
+    // Letter scale: 0.2 = tiny (realistic), 1.0 = full canvas
+    this.letterScale = 0.5;
+
     // Template cache
     this.templatePoints = [];
     this.templateStrokes = [];
@@ -24,10 +27,33 @@ export class DrawingCanvas {
     this.setLetter('A');
   }
 
+  setScale(scale) {
+    this.letterScale = Math.max(0.15, Math.min(1, scale));
+    this.clear();
+  }
+
+  // Convert template coord (0-100) → canvas pixel coord
+  _t2c(val) {
+    const s = this.size;
+    const scale = this.letterScale;
+    const offset = (1 - scale) / 2;
+    return (offset + val / 100 * scale) * s;
+  }
+
+  // Convert canvas pixel coord → template coord (0-100)
+  _c2t(px) {
+    const s = this.size;
+    const scale = this.letterScale;
+    const offset = (1 - scale) / 2;
+    return ((px / s) - offset) / scale * 100;
+  }
+
   _setupCanvas() {
     const resize = () => {
       const container = this.canvas.parentElement;
-      const size = Math.min(container.clientWidth - 32, 500);
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      const size = Math.min(w, h, 600);
       const dpr = window.devicePixelRatio || 1;
       this.canvas.style.width = size + 'px';
       this.canvas.style.height = size + 'px';
@@ -56,9 +82,12 @@ export class DrawingCanvas {
 
   _getPos(e) {
     const rect = this.canvas.getBoundingClientRect();
+    // Convert screen coords → template coords (0-100) through scale
+    const canvasX = (e.clientX - rect.left) / rect.width * this.size;
+    const canvasY = (e.clientY - rect.top) / rect.height * this.size;
     return {
-      x: ((e.clientX - rect.left) / rect.width) * 100,
-      y: ((e.clientY - rect.top) / rect.height) * 100,
+      x: this._c2t(canvasX),
+      y: this._c2t(canvasY),
       pressure: e.pressure || 0.5,
       pointerType: e.pointerType
     };
@@ -162,76 +191,91 @@ export class DrawingCanvas {
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, s, s);
 
-    // Grid lines
+    // Ruled lines across full canvas
     ctx.strokeStyle = '#252545';
-    ctx.lineWidth = 1;
-    const step = s / 10;
-    for (let i = 1; i < 10; i++) {
+    ctx.lineWidth = 0.5;
+    const lineStep = s / 20;
+    for (let i = 1; i < 20; i++) {
       ctx.beginPath();
-      ctx.moveTo(i * step, 0);
-      ctx.lineTo(i * step, s);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(0, i * step);
-      ctx.lineTo(s, i * step);
+      ctx.moveTo(0, i * lineStep);
+      ctx.lineTo(s, i * lineStep);
       ctx.stroke();
     }
 
-    // Center crosshair (subtle)
+    // Letter bounding box (shows where the letter lives)
+    const scale = this.letterScale;
+    const offset = (1 - scale) / 2 * s;
+    const boxSize = scale * s;
+
+    // Box background (slightly lighter)
+    ctx.fillStyle = '#1e1e38';
+    ctx.fillRect(offset, offset, boxSize, boxSize);
+
+    // Box outline
     ctx.strokeStyle = '#2a2a50';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([6, 6]);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(offset, offset, boxSize, boxSize);
+
+    // Crosshairs inside box
+    ctx.strokeStyle = '#2a2a50';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
     ctx.beginPath();
-    ctx.moveTo(s / 2, 0);
-    ctx.lineTo(s / 2, s);
+    ctx.moveTo(offset + boxSize / 2, offset);
+    ctx.lineTo(offset + boxSize / 2, offset + boxSize);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(0, s / 2);
-    ctx.lineTo(s, s / 2);
+    ctx.moveTo(offset, offset + boxSize / 2);
+    ctx.lineTo(offset + boxSize, offset + boxSize / 2);
     ctx.stroke();
     ctx.setLineDash([]);
   }
 
   _drawTemplate(ctx, s) {
+    const glowSize = Math.max(8, 22 * this.letterScale);
+    const dotSize = Math.max(1.5, 2 * this.letterScale);
+    const startDot = Math.max(3, 5 * this.letterScale);
+    const lineW = Math.max(1.5, 3 * this.letterScale);
+
     for (const stroke of this.templateStrokes) {
       if (stroke.length < 2) continue;
 
       // Glow effect
       ctx.strokeStyle = 'rgba(144, 202, 249, 0.08)';
-      ctx.lineWidth = 22;
+      ctx.lineWidth = glowSize;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
-      ctx.moveTo(stroke[0][0] * s / 100, stroke[0][1] * s / 100);
+      ctx.moveTo(this._t2c(stroke[0][0]), this._t2c(stroke[0][1]));
       for (let i = 1; i < stroke.length; i++) {
-        ctx.lineTo(stroke[i][0] * s / 100, stroke[i][1] * s / 100);
+        ctx.lineTo(this._t2c(stroke[i][0]), this._t2c(stroke[i][1]));
       }
       ctx.stroke();
 
       // Dotted guide path
       ctx.strokeStyle = 'rgba(144, 202, 249, 0.35)';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([4, 8]);
+      ctx.lineWidth = lineW;
+      ctx.setLineDash([3, 6]);
       ctx.beginPath();
-      ctx.moveTo(stroke[0][0] * s / 100, stroke[0][1] * s / 100);
+      ctx.moveTo(this._t2c(stroke[0][0]), this._t2c(stroke[0][1]));
       for (let i = 1; i < stroke.length; i++) {
-        ctx.lineTo(stroke[i][0] * s / 100, stroke[i][1] * s / 100);
+        ctx.lineTo(this._t2c(stroke[i][0]), this._t2c(stroke[i][1]));
       }
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Dots at waypoints (show where the template points are)
+      // Dots at waypoints
       ctx.fillStyle = 'rgba(144, 202, 249, 0.25)';
       for (const [x, y] of stroke) {
         ctx.beginPath();
-        ctx.arc(x * s / 100, y * s / 100, 2, 0, Math.PI * 2);
+        ctx.arc(this._t2c(x), this._t2c(y), dotSize, 0, Math.PI * 2);
         ctx.fill();
       }
 
       // Start dot (brighter)
       ctx.fillStyle = 'rgba(144, 202, 249, 0.6)';
       ctx.beginPath();
-      ctx.arc(stroke[0][0] * s / 100, stroke[0][1] * s / 100, 5, 0, Math.PI * 2);
+      ctx.arc(this._t2c(stroke[0][0]), this._t2c(stroke[0][1]), startDot, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -247,6 +291,7 @@ export class DrawingCanvas {
 
     const pts = stroke.map(p => [p.x, p.y]);
     const dists = pointDistances(pts, this.templatePoints);
+    const strokeW = Math.max(1.5, this.letterScale * 3);
 
     for (let i = 1; i < stroke.length; i++) {
       const p0 = stroke[i - 1];
@@ -254,8 +299,8 @@ export class DrawingCanvas {
       const dist = dists[i];
       const color = distanceColor(dist);
 
-      // Pressure-based width: 2–6px
-      const width = 2 + (p1.pressure || 0.5) * 4;
+      // Pressure-based width, scaled to letter size
+      const width = strokeW + (p1.pressure || 0.5) * strokeW * 1.5;
 
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
@@ -263,8 +308,8 @@ export class DrawingCanvas {
       ctx.lineJoin = 'round';
       ctx.globalAlpha = isActive ? 0.85 : 1;
       ctx.beginPath();
-      ctx.moveTo(p0.x * s / 100, p0.y * s / 100);
-      ctx.lineTo(p1.x * s / 100, p1.y * s / 100);
+      ctx.moveTo(this._t2c(p0.x), this._t2c(p0.y));
+      ctx.lineTo(this._t2c(p1.x), this._t2c(p1.y));
       ctx.stroke();
       ctx.globalAlpha = 1;
     }

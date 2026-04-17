@@ -29,6 +29,12 @@
     <div id="letter-picker" class="letter-picker" role="tablist" aria-label="Choose a letter to practice"></div>
   </div>
 
+  <div class="size-control">
+    <label for="size-slider" class="size-label">Size</label>
+    <input type="range" id="size-slider" class="size-slider" min="15" max="100" value="50" step="5">
+    <span id="size-value" class="size-value">50%</span>
+  </div>
+
   <div class="canvas-wrap">
     <canvas id="draw-canvas" aria-label="Drawing canvas — trace the letter guide"></canvas>
   </div>
@@ -58,10 +64,10 @@
   </section>
 
   <div class="controls">
-    <button class="ctrl-btn" id="btn-prev" aria-label="Previous letter">&#9664; Prev</button>
+    <button class="ctrl-btn" id="btn-prev" aria-label="Previous letter">&#9664;</button>
     <button class="ctrl-btn" id="btn-clear">Clear</button>
     <button class="ctrl-btn" id="btn-undo">Undo</button>
-    <button class="ctrl-btn primary" id="btn-next" aria-label="Next letter">Next &#9654;</button>
+    <button class="ctrl-btn primary" id="btn-next" aria-label="Next letter">&#9654;</button>
   </div>
 
   <div class="hint">
