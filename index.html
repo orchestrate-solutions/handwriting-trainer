@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f0f1a">
+  <meta name="description" content="Practice handwriting with real-time similarity scoring. Works offline. Supports stylus, touch, and mouse.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Handwriting Trainer</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./img/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./img/icon-180.png">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+      </svg>
+      Handwriting Trainer
+    </div>
+    <button id="install-btn" hidden>Install App</button>
+  </header>
+
+  <div class="letter-picker-wrap">
+    <div id="letter-picker" class="letter-picker" role="tablist" aria-label="Choose a letter to practice"></div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="draw-canvas" aria-label="Drawing canvas — trace the letter guide"></canvas>
+  </div>
+
+  <section class="score-section">
+    <div class="score-bar-wrap">
+      <div id="score-bar-fill" class="score-bar-fill"></div>
+    </div>
+    <div class="score-grid">
+      <div class="score-card">
+        <div class="score-label">Accuracy</div>
+        <div id="score-accuracy" class="score-value low">0%</div>
+      </div>
+      <div class="score-card">
+        <div class="score-label">Coverage</div>
+        <div id="score-coverage" class="score-value low">0%</div>
+      </div>
+      <div class="score-card">
+        <div class="score-label">Smoothness</div>
+        <div id="score-smoothness" class="score-value low">0%</div>
+      </div>
+      <div class="score-card">
+        <div class="score-label">Overall</div>
+        <div id="score-overall" class="score-value low">0%</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <button class="ctrl-btn" id="btn-prev" aria-label="Previous letter">&#9664; Prev</button>
+    <button class="ctrl-btn" id="btn-clear">Clear</button>
+    <button class="ctrl-btn" id="btn-undo">Undo</button>
+    <button class="ctrl-btn primary" id="btn-next" aria-label="Next letter">Next &#9654;</button>
+  </div>
+
+  <div class="hint">
+    Trace the guide with your stylus, finger, or mouse.
+    <br>
+    <kbd>←</kbd> <kbd>→</kbd> change letter &nbsp;·&nbsp; <kbd>Esc</kbd> clear &nbsp;·&nbsp; <kbd>⌘Z</kbd> undo
+    &nbsp;·&nbsp; Press any letter key to jump
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
