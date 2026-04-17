@@ -1,4 +1,5 @@
 // Main app controller — wires canvas, letter picker, score display
+// Uses cup-ui components: <cup-slider>, <cup-button>, <cup-progress>
 import { DrawingCanvas } from './canvas.js';
 import { LETTER_ORDER } from './templates.js';
 
@@ -12,7 +13,7 @@ function init() {
     coverage: document.getElementById('score-coverage'),
     smoothness: document.getElementById('score-smoothness'),
     overall: document.getElementById('score-overall'),
-    bar: document.getElementById('score-bar-fill')
+    bar: document.getElementById('score-bar')
   };
 
   canvas = new DrawingCanvas(canvasEl, score => updateScoreDisplay(score, scoreEls));
@@ -60,16 +61,10 @@ function selectLetter(idx) {
   const letter = LETTER_ORDER[idx];
   canvas.setLetter(letter);
 
-  // Update active state
   document.querySelectorAll('.letter-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === idx);
   });
 
-  // Update current letter display
-  const display = document.getElementById('current-letter');
-  if (display) display.textContent = letter;
-
-  // Scroll active button into view
   const activeBtn = document.querySelector('.letter-btn.active');
   if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
@@ -84,12 +79,11 @@ function bindButtons() {
     selectLetter((currentLetterIdx + 1) % 26);
   });
 
-  // Size slider
+  // cup-slider emits 'input' from its internal <input>
   const slider = document.getElementById('size-slider');
-  const sizeValue = document.getElementById('size-value');
-  slider.addEventListener('input', () => {
-    const pct = parseInt(slider.value, 10);
-    sizeValue.textContent = pct + '%';
+  slider.addEventListener('input', e => {
+    const input = slider.querySelector('input') || e.target;
+    const pct = parseInt(input.value, 10);
     canvas.setScale(pct / 100);
   });
 }
@@ -115,16 +109,16 @@ function updateScoreDisplay(score, els) {
   els.smoothness.textContent = fmt(score.smoothness) + '%';
   els.overall.textContent = fmt(score.overall) + '%';
 
-  // Animate bar
+  // Update cup-progress bar
   const pct = fmt(score.overall);
-  els.bar.style.width = pct + '%';
+  if (els.bar) {
+    els.bar.setAttribute('value', pct);
+    // Set variant based on score level
+    if (pct >= 80) els.bar.setAttribute('variant', 'success');
+    else if (pct >= 50) els.bar.setAttribute('variant', 'warning');
+    else els.bar.setAttribute('variant', 'error');
+  }
 
-  // Color the bar based on score
-  if (pct >= 80) els.bar.style.background = '#66bb6a';
-  else if (pct >= 50) els.bar.style.background = '#ffa726';
-  else els.bar.style.background = '#ef5350';
-
-  // Color individual scores
   colorScore(els.accuracy, score.accuracy);
   colorScore(els.coverage, score.coverage);
   colorScore(els.smoothness, score.smoothness);

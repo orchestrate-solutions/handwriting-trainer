@@ -11,7 +11,15 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./img/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./img/icon-180.png">
-  <link rel="stylesheet" href="./css/style.css">
+
+  <!-- cup-ui design system -->
+  <link rel="stylesheet" href="./vendor/cup-ui/tokens.css">
+  <link rel="stylesheet" href="./vendor/cup-ui/reset.css">
+  <link rel="stylesheet" href="./vendor/cup-ui/css/nano.css">
+  <link rel="stylesheet" href="./vendor/cup-ui/css/micro.css">
+  <link rel="stylesheet" href="./vendor/cup-ui/css/components.css">
+  <!-- App-specific overrides -->
+  <link rel="stylesheet" href="./css/app.css">
 </head>
 <body>
 
@@ -22,7 +30,7 @@
       </svg>
       Handwriting Trainer
     </div>
-    <button id="install-btn" hidden>Install App</button>
+    <cup-button variant="outline" size="sm" id="install-btn" hidden>Install</cup-button>
   </header>
 
   <div class="letter-picker-wrap">
@@ -30,9 +38,7 @@
   </div>
 
   <div class="size-control">
-    <label for="size-slider" class="size-label">Size</label>
-    <input type="range" id="size-slider" class="size-slider" min="15" max="100" value="50" step="5">
-    <span id="size-value" class="size-value">50%</span>
+    <cup-slider id="size-slider" label="Size" min="15" max="100" value="50" step="5" show-value></cup-slider>
   </div>
 
   <div class="canvas-wrap">
@@ -40,43 +46,42 @@
   </div>
 
   <section class="score-section">
-    <div class="score-bar-wrap">
-      <div id="score-bar-fill" class="score-bar-fill"></div>
-    </div>
+    <cup-progress id="score-bar" value="0" max="100" label="Overall" size="sm"></cup-progress>
     <div class="score-grid">
       <div class="score-card">
-        <div class="score-label">Accuracy</div>
+        <span class="cup-label" style="font-size:var(--cup-font-size-xs)">Accuracy</span>
         <div id="score-accuracy" class="score-value low">0%</div>
       </div>
       <div class="score-card">
-        <div class="score-label">Coverage</div>
+        <span class="cup-label" style="font-size:var(--cup-font-size-xs)">Coverage</span>
         <div id="score-coverage" class="score-value low">0%</div>
       </div>
       <div class="score-card">
-        <div class="score-label">Smoothness</div>
+        <span class="cup-label" style="font-size:var(--cup-font-size-xs)">Smoothness</span>
         <div id="score-smoothness" class="score-value low">0%</div>
       </div>
       <div class="score-card">
-        <div class="score-label">Overall</div>
+        <span class="cup-label" style="font-size:var(--cup-font-size-xs)">Overall</span>
         <div id="score-overall" class="score-value low">0%</div>
       </div>
     </div>
   </section>
 
   <div class="controls">
-    <button class="ctrl-btn" id="btn-prev" aria-label="Previous letter">&#9664;</button>
-    <button class="ctrl-btn" id="btn-clear">Clear</button>
-    <button class="ctrl-btn" id="btn-undo">Undo</button>
-    <button class="ctrl-btn primary" id="btn-next" aria-label="Next letter">&#9654;</button>
+    <cup-button variant="secondary" id="btn-prev" aria-label="Previous letter">&#9664;</cup-button>
+    <cup-button variant="secondary" id="btn-clear">Clear</cup-button>
+    <cup-button variant="secondary" id="btn-undo">Undo</cup-button>
+    <cup-button variant="primary" id="btn-next" aria-label="Next letter">&#9654;</cup-button>
   </div>
 
   <div class="hint">
     Trace the guide with your stylus, finger, or mouse.
     <br>
-    <kbd>←</kbd> <kbd>→</kbd> change letter &nbsp;·&nbsp; <kbd>Esc</kbd> clear &nbsp;·&nbsp; <kbd>⌘Z</kbd> undo
-    &nbsp;·&nbsp; Press any letter key to jump
+    <kbd>←</kbd> <kbd>→</kbd> change letter · <kbd>Esc</kbd> clear · <kbd>⌘Z</kbd> undo · Press any letter key
   </div>
 
+  <!-- cup-ui web components -->
+  <script type="module" src="./vendor/cup-ui/cup.js"></script>
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>

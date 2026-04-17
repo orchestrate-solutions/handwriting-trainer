@@ -1,0 +1,204 @@
+/* App-specific styles — cup-ui handles tokens, reset, components */
+
+body {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  background: var(--cup-color-surface);
+}
+
+/* --- Header --- */
+.app-header {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--cup-space-sm) var(--cup-space-sm) var(--cup-space-xs);
+  flex-shrink: 0;
+}
+
+.app-title {
+  font-size: var(--cup-font-size-sm);
+  font-weight: var(--cup-font-weight-bold);
+  color: var(--cup-color-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--cup-space-xs);
+}
+
+.app-title svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* --- Letter Picker --- */
+.letter-picker-wrap {
+  width: 100%;
+  max-width: 560px;
+  padding: 0 var(--cup-space-sm);
+  flex-shrink: 0;
+}
+
+.letter-picker {
+  display: flex;
+  gap: var(--cup-space-xs);
+  overflow-x: auto;
+  padding: var(--cup-space-xs) var(--cup-space-2xs);
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+
+.letter-picker::-webkit-scrollbar { display: none; }
+
+.letter-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cup-radius-sm);
+  border: 1.5px solid var(--cup-color-border);
+  background: var(--cup-color-surface);
+  color: var(--cup-color-placeholder);
+  font-size: var(--cup-font-size-xs);
+  font-weight: var(--cup-font-weight-bold);
+  cursor: pointer;
+  transition: all var(--cup-transition-fast);
+  scroll-snap-align: center;
+}
+
+.letter-btn:hover {
+  border-color: var(--cup-color-primary);
+  color: var(--cup-color-on-surface);
+}
+
+.letter-btn.active {
+  background: var(--cup-color-primary);
+  border-color: var(--cup-color-primary);
+  color: var(--cup-color-on-primary);
+}
+
+/* --- Size Control --- */
+.size-control {
+  width: 100%;
+  max-width: 560px;
+  padding: 0 var(--cup-space-sm);
+  flex-shrink: 0;
+}
+
+.size-control cup-slider {
+  --cup-space-md: 0.25rem; /* tighten slider padding */
+}
+
+/* --- Canvas Area --- */
+.canvas-wrap {
+  width: 100%;
+  max-width: 560px;
+  flex: 1;
+  min-height: 0;
+  padding: var(--cup-space-xs) var(--cup-space-sm);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#draw-canvas {
+  border-radius: var(--cup-radius-md);
+  cursor: crosshair;
+  touch-action: none;
+  box-shadow: var(--cup-shadow-md);
+}
+
+/* --- Score Display --- */
+.score-section {
+  width: 100%;
+  max-width: 560px;
+  padding: var(--cup-space-xs) var(--cup-space-sm) var(--cup-space-xs);
+  flex-shrink: 0;
+}
+
+.score-section cup-progress {
+  margin-bottom: var(--cup-space-sm);
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--cup-space-xs);
+}
+
+.score-card {
+  background: var(--cup-color-surface);
+  border-radius: var(--cup-radius-sm);
+  padding: var(--cup-space-xs);
+  text-align: center;
+  border: 1px solid var(--cup-color-border);
+}
+
+.score-value {
+  font-size: var(--cup-font-size-base);
+  font-weight: var(--cup-font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--cup-transition-fast);
+}
+
+.score-value.good { color: var(--cup-color-success); }
+.score-value.ok   { color: var(--cup-color-warning); }
+.score-value.low  { color: var(--cup-color-error); }
+
+/* --- Controls --- */
+.controls {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  gap: var(--cup-space-xs);
+  padding: var(--cup-space-xs) var(--cup-space-sm) var(--cup-space-sm);
+  flex-shrink: 0;
+}
+
+.controls cup-button {
+  flex: 1;
+}
+
+/* --- Hint --- */
+.hint {
+  width: 100%;
+  max-width: 560px;
+  padding: 0 var(--cup-space-sm) var(--cup-space-xs);
+  text-align: center;
+  font-size: var(--cup-font-size-xs);
+  color: var(--cup-color-placeholder);
+  flex-shrink: 0;
+  line-height: var(--cup-line-height);
+}
+
+.hint kbd {
+  display: inline-block;
+  padding: 0 3px;
+  border-radius: var(--cup-radius-sm);
+  background: var(--cup-color-surface-alt);
+  border: 1px solid var(--cup-color-border);
+  font-size: 0.6rem;
+  font-family: inherit;
+}
+
+/* --- Responsive --- */
+@media (max-width: 400px) {
+  .letter-btn {
+    width: 28px;
+    height: 28px;
+  }
+  .score-value { font-size: var(--cup-font-size-sm); }
+  .hint { display: none; }
+}
+
+@media (display-mode: standalone) {
+  .app-header {
+    padding-top: max(var(--cup-space-sm), env(safe-area-inset-top));
+  }
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  #install-btn { display: none; }
+}
