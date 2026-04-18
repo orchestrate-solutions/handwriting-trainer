@@ -5,10 +5,15 @@
  * System fonts are used by default (no loading required).
  */
 export const FONT_PRESETS = [
-  { label: 'Serif (default)', family: 'Georgia, serif' },
-  { label: 'Cursive',         family: 'cursive' },
-  { label: 'Monospace',       family: '"Courier New", monospace' },
-  { label: 'Sans-Serif',      family: 'Arial, sans-serif' },
+  { label: 'Serif (default)',   family: 'Georgia, serif' },
+  // Natural handwriting-style fonts (system fonts — vary by OS)
+  { label: 'Comic Sans',        family: '"Comic Sans MS", "Comic Sans", cursive' },
+  { label: 'Bradley Hand',      family: '"Bradley Hand ITC", "Bradley Hand", cursive' },
+  { label: 'Chalkboard',        family: '"Chalkboard SE", "Chalkboard", cursive' },
+  // Print / technical
+  { label: 'Cursive',           family: 'cursive' },
+  { label: 'Sans-Serif',        family: 'Arial, sans-serif' },
+  { label: 'Monospace',         family: '"Courier New", monospace' },
 ];
 
 export const DEFAULT_FONT = FONT_PRESETS[0].family;

@@ -1,6 +1,7 @@
 // Canvas drawing engine — Pointer Events, DPI-aware, pressure-sensitive
 import { pointDistances, distanceColor, compositeScore } from './scoring.js';
 import { extractFontPoints, DEFAULT_FONT } from './fonts.js';
+import { DEFAULT_DIFFICULTY } from './difficulty.js';
 
 export class DrawingCanvas {
   /**
@@ -28,6 +29,9 @@ export class DrawingCanvas {
     this.fontFamily = DEFAULT_FONT;
     this._extractFn = options._extractFn || extractFontPoints;
     this._pointCache = new Map(); // key: `${letter}::${family}` → [x,y][]
+
+    // Difficulty — controls template guide opacity
+    this.difficulty = options.difficulty || DEFAULT_DIFFICULTY;
 
     // Template points (in 0-100 space) for the current letter + font
     this.templatePoints = [];
@@ -156,6 +160,17 @@ export class DrawingCanvas {
     this.clear();
   }
 
+  /** Update difficulty (changes guide opacity). Triggers a re-render. */
+  setDifficulty(difficulty) {
+    this.difficulty = difficulty;
+    this.render();
+  }
+
+  /** Export the current canvas state as a JPEG data URL. */
+  toDataURL(type = 'image/jpeg', quality = 0.7) {
+    return this.canvas.toDataURL(type, quality);
+  }
+
   /** Internal: get (cached) template points for a letter in the current font. */
   _getTemplatePoints(letter) {
     const key = `${letter}::${this.fontFamily}`;
@@ -278,13 +293,13 @@ export class DrawingCanvas {
 
     // Soft glow pass
     ctx.shadowColor = 'rgba(144, 202, 249, 0.25)';
-    ctx.shadowBlur = Math.max(8, fontSize * 0.08);
-    ctx.fillStyle = 'rgba(144, 202, 249, 0.10)';
+    ctx.shadowBlur = Math.max(4, fontSize * this.difficulty.glowBlur);
+    ctx.fillStyle = `rgba(144, 202, 249, ${this.difficulty.glowOpacity})`;
     ctx.fillText(this.currentLetter, s / 2, s / 2);
 
     // Main guide pass
     ctx.shadowBlur = 0;
-    ctx.fillStyle = 'rgba(144, 202, 249, 0.22)';
+    ctx.fillStyle = `rgba(144, 202, 249, ${this.difficulty.guideOpacity})`;
     ctx.fillText(this.currentLetter, s / 2, s / 2);
 
     ctx.restore();

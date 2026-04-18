@@ -3,10 +3,14 @@
 import { DrawingCanvas } from './canvas.js';
 import { DRILLS, DEFAULT_DRILL } from './drills.js';
 import { FONT_PRESETS, loadCustomFont } from './fonts.js';
+import { DIFFICULTIES, DEFAULT_DIFFICULTY } from './difficulty.js';
+import { saveEntry, getHistory, clearHistory } from './history.js';
 
 let canvas;
 let currentDrill = DEFAULT_DRILL;
 let currentItemIdx = 0;
+let currentDifficulty = DEFAULT_DIFFICULTY;
+let lastScore = null; // most recent score from onScoreUpdate
 
 function init() {
   const canvasEl = document.getElementById('draw-canvas');
@@ -18,14 +22,21 @@ function init() {
     bar: document.getElementById('score-bar')
   };
 
-  canvas = new DrawingCanvas(canvasEl, score => updateScoreDisplay(score, scoreEls));
+  canvas = new DrawingCanvas(canvasEl, score => {
+    lastScore = score;
+    updateScoreDisplay(score, scoreEls);
+  });
 
   buildDrillNav();
   buildItemPicker(currentDrill.items);
+  buildDifficultyPicker();
   buildFontPicker();
   bindButtons();
   bindKeyboard();
-  selectItem(0);
+  selectItem(0, { save: false });
+
+  // Auto-save when user leaves the page
+  window.addEventListener('beforeunload', () => saveCurrentToHistory());
 
   // Register service worker
   if ('serviceWorker' in navigator) {
@@ -63,16 +74,39 @@ function buildDrillNav() {
 }
 
 function selectDrill(drill) {
+  saveCurrentToHistory();
   currentDrill = drill;
   currentItemIdx = 0;
   document.querySelectorAll('.drill-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.id === drill.id);
   });
   buildItemPicker(drill.items);
-  selectItem(0);
+  selectItem(0, { save: false });
 }
 
-function buildItemPicker(items) {
+function buildDifficultyPicker() {
+  const nav = document.getElementById('difficulty-nav');
+  if (!nav) return;
+  DIFFICULTIES.forEach(diff => {
+    const btn = document.createElement('button');
+    btn.className = 'difficulty-btn';
+    btn.textContent = diff.label;
+    btn.dataset.id = diff.id;
+    btn.classList.toggle('active', diff.id === currentDifficulty.id);
+    btn.addEventListener('click', () => selectDifficulty(diff));
+    nav.appendChild(btn);
+  });
+}
+
+function selectDifficulty(diff) {
+  currentDifficulty = diff;
+  canvas.setDifficulty(diff);
+  document.querySelectorAll('.difficulty-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.id === diff.id);
+  });
+}
+
+
   const picker = document.getElementById('letter-picker');
   picker.innerHTML = '';
   items.forEach((item, idx) => {
@@ -132,7 +166,8 @@ function buildLetterPicker() {
   buildItemPicker(currentDrill.items);
 }
 
-function selectItem(idx) {
+function selectItem(idx, { save = true } = {}) {
+  if (save) saveCurrentToHistory();
   currentItemIdx = idx;
   const item = currentDrill.items[idx];
   canvas.setLetter(item);
@@ -147,6 +182,29 @@ function selectItem(idx) {
 
 // Keep alias for any external callers / tests
 function selectLetter(idx) { selectItem(idx); }
+
+/**
+ * Capture the current canvas state and append it to localStorage history.
+ * Skips if there are no user strokes or the score is zero.
+ */
+function saveCurrentToHistory() {
+  if (!canvas || canvas.userStrokes.length === 0) return;
+  if (!lastScore || lastScore.overall <= 0) return;
+
+  const entry = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    drill: currentDrill.id,
+    drillLabel: currentDrill.label,
+    item: currentDrill.items[currentItemIdx],
+    font: canvas.fontFamily,
+    difficulty: currentDifficulty.id,
+    difficultyLabel: currentDifficulty.label,
+    score: { ...lastScore },
+    timestamp: Date.now(),
+    imageDataUrl: canvas.toDataURL(),
+  };
+  saveEntry(entry);
+}
 
 function bindButtons() {
   document.getElementById('btn-clear').addEventListener('click', () => canvas.clear());
@@ -165,6 +223,24 @@ function bindButtons() {
     const pct = parseInt(input.value, 10);
     canvas.setScale(pct / 100);
   });
+
+  // History panel
+  const historyBtn = document.getElementById('history-btn');
+  const historyPanel = document.getElementById('history-panel');
+  const historyClose = document.getElementById('history-close');
+  const historyClear = document.getElementById('history-clear-btn');
+
+  if (historyBtn && historyPanel) {
+    historyBtn.addEventListener('click', () => openHistoryPanel());
+    historyClose.addEventListener('click', () => closeHistoryPanel());
+    historyPanel.addEventListener('click', e => {
+      if (e.target === historyPanel) closeHistoryPanel();
+    });
+    historyClear.addEventListener('click', () => {
+      clearHistory();
+      renderHistoryGrid([]);
+    });
+  }
 }
 
 function bindKeyboard() {
@@ -215,3 +291,89 @@ function colorScore(el, value) {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// --- History Panel ---
+
+function openHistoryPanel() {
+  const panel = document.getElementById('history-panel');
+  if (!panel) return;
+  renderHistoryGrid(getHistory());
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  document.getElementById('history-close').focus();
+}
+
+function closeHistoryPanel() {
+  const panel = document.getElementById('history-panel');
+  if (!panel) return;
+  panel.classList.remove('open');
+  panel.setAttribute('aria-hidden', 'true');
+}
+
+function renderHistoryGrid(entries) {
+  const grid = document.getElementById('history-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  if (entries.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'history-empty';
+    empty.textContent = 'No saves yet — practice a letter and move on to save automatically.';
+    grid.appendChild(empty);
+    return;
+  }
+
+  for (const entry of entries) {
+    grid.appendChild(buildHistoryCard(entry));
+  }
+}
+
+function buildHistoryCard(entry) {
+  const card = document.createElement('div');
+  card.className = 'history-card';
+
+  const img = document.createElement('img');
+  img.src = entry.imageDataUrl;
+  img.loading = 'lazy';
+  img.alt = `Practice attempt for “${entry.item}”`;
+  img.className = 'history-card__img';
+  card.appendChild(img);
+
+  const foot = document.createElement('div');
+  foot.className = 'history-card__foot';
+
+  const row = document.createElement('div');
+  row.className = 'history-card__row';
+
+  const itemEl = document.createElement('span');
+  itemEl.className = 'history-card__item';
+  itemEl.textContent = entry.item;
+
+  const scoreVal = Math.round((entry.score.overall || 0) * 100);
+  const scoreClass = scoreVal >= 80 ? 'good' : scoreVal >= 50 ? 'ok' : 'low';
+  const scoreEl = document.createElement('span');
+  scoreEl.className = `history-card__score score-value ${scoreClass}`;
+  scoreEl.textContent = `${scoreVal}%`;
+
+  row.append(itemEl, scoreEl);
+
+  const metaEl = document.createElement('div');
+  metaEl.className = 'history-card__meta';
+  metaEl.textContent = `${entry.drillLabel} · ${entry.difficultyLabel}`;
+
+  const dateEl = document.createElement('div');
+  dateEl.className = 'history-card__date';
+  dateEl.textContent = formatDate(entry.timestamp);
+
+  foot.append(row, metaEl, dateEl);
+  card.appendChild(foot);
+  return card;
+}
+
+function formatDate(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'Just now';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}

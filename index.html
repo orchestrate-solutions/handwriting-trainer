@@ -30,10 +30,19 @@
       </svg>
       Handwriting Trainer
     </div>
-    <cup-button variant="outline" size="sm" id="install-btn" hidden>Install</cup-button>
+    <div class="header-actions">
+      <button class="history-btn" id="history-btn" aria-label="View practice history" title="Practice history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </button>
+      <cup-button variant="outline" size="sm" id="install-btn" hidden>Install</cup-button>
+    </div>
   </header>
 
   <nav class="drill-nav" id="drill-nav" aria-label="Practice drills"></nav>
+  <nav class="difficulty-nav" id="difficulty-nav" aria-label="Difficulty level"></nav>
 
   <div class="letter-picker-wrap">
     <div id="letter-picker" class="letter-picker" role="tablist" aria-label="Choose an item to practice"></div>
@@ -90,6 +99,25 @@
     Trace the guide with your stylus, finger, or mouse.
     <br>
     <kbd>←</kbd> <kbd>→</kbd> prev/next · <kbd>Esc</kbd> clear · <kbd>⌘Z</kbd> undo · type any key to jump
+  </div>
+
+  <!-- History panel (full-screen bottom sheet) -->
+  <div class="history-panel" id="history-panel" role="dialog" aria-label="Practice history" aria-hidden="true">
+    <div class="history-panel__inner">
+      <div class="history-panel__header">
+        <h2 class="history-panel__title">Practice History</h2>
+        <button class="history-close" id="history-close" aria-label="Close history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="history-panel__actions">
+        <button class="history-clear-btn" id="history-clear-btn">Clear All</button>
+      </div>
+      <div class="history-grid" id="history-grid"></div>
+    </div>
   </div>
 
   <!-- cup-ui web components -->
