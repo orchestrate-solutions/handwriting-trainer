@@ -43,7 +43,7 @@ export class DrawingCanvas {
 
   setScale(scale) {
     this.letterScale = Math.max(0.15, Math.min(1, scale));
-    this.clear();
+    this.render();
   }
 
   // Convert template coord (0-100) → canvas pixel coord

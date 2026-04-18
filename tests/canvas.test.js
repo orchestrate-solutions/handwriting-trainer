@@ -245,7 +245,7 @@ describe('DrawingCanvas', () => {
         [{ x: 10, y: 10, pressure: 0.5 }, { x: 20, y: 20, pressure: 0.5 }],
       ];
       canvas.setScale(0.3);
-      expect(canvas.userStrokes).toEqual([]);
+      expect(canvas.userStrokes).toHaveLength(1); // strokes preserved on scale change
     });
   });
 
