@@ -80,16 +80,76 @@ body {
   color: var(--cup-color-on-primary);
 }
 
-/* --- Size Control --- */
-.size-control {
+/* --- Size + Font Controls --- */
+.controls-row {
   width: 100%;
   max-width: 560px;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--cup-space-sm);
   padding: 0 var(--cup-space-sm);
   flex-shrink: 0;
 }
 
+.size-control {
+  flex: 1;
+  min-width: 0;
+}
+
 .size-control cup-slider {
   --cup-space-md: 0.25rem; /* tighten slider padding */
+}
+
+/* --- Font Control --- */
+.font-control {
+  display: flex;
+  align-items: center;
+  gap: var(--cup-space-xs);
+  flex-shrink: 0;
+  padding-bottom: 2px; /* align with slider baseline */
+}
+
+.font-control__label {
+  font-size: var(--cup-font-size-xs);
+  color: var(--cup-color-placeholder);
+  white-space: nowrap;
+}
+
+.font-select {
+  height: 32px;
+  padding: 0 var(--cup-space-xs);
+  border-radius: var(--cup-radius-sm);
+  border: 1.5px solid var(--cup-color-border);
+  background: var(--cup-color-surface);
+  color: var(--cup-color-on-surface);
+  font-size: var(--cup-font-size-xs);
+  cursor: pointer;
+  max-width: 130px;
+}
+
+.font-select:focus {
+  outline: 2px solid var(--cup-color-focus);
+  outline-offset: 1px;
+}
+
+.font-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--cup-space-xs);
+  border-radius: var(--cup-radius-sm);
+  border: 1.5px solid var(--cup-color-border);
+  background: var(--cup-color-surface);
+  color: var(--cup-color-placeholder);
+  font-size: var(--cup-font-size-xs);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--cup-transition-fast), color var(--cup-transition-fast);
+}
+
+.font-upload-btn:hover {
+  border-color: var(--cup-color-primary);
+  color: var(--cup-color-on-surface);
 }
 
 /* --- Canvas Area --- */

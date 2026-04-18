@@ -1,9 +1,16 @@
 // Canvas drawing engine — Pointer Events, DPI-aware, pressure-sensitive
-import { getTemplatePoints, getTemplateStrokes } from './templates.js';
+import { LETTER_ORDER } from './templates.js';
 import { pointDistances, distanceColor, compositeScore } from './scoring.js';
+import { extractFontPoints, DEFAULT_FONT } from './fonts.js';
 
 export class DrawingCanvas {
-  constructor(canvasEl, onScoreUpdate) {
+  /**
+   * @param {HTMLCanvasElement} canvasEl
+   * @param {function} onScoreUpdate
+   * @param {object} [options]
+   * @param {function} [options._extractFn] - Override font extraction (used in tests)
+   */
+  constructor(canvasEl, onScoreUpdate, options = {}) {
     this.canvas = canvasEl;
     this.ctx = canvasEl.getContext('2d');
     this.onScoreUpdate = onScoreUpdate;
@@ -18,9 +25,13 @@ export class DrawingCanvas {
     // Letter scale: 0.2 = tiny (realistic), 1.0 = full canvas
     this.letterScale = 0.5;
 
-    // Template cache
+    // Font
+    this.fontFamily = DEFAULT_FONT;
+    this._extractFn = options._extractFn || extractFontPoints;
+    this._pointCache = new Map(); // key: `${letter}::${family}` → [x,y][]
+
+    // Template points (in 0-100 space) for the current letter + font
     this.templatePoints = [];
-    this.templateStrokes = [];
 
     this._setupCanvas();
     this._bindEvents();
@@ -131,11 +142,28 @@ export class DrawingCanvas {
     this.render();
   }
 
+  /** Change the active letter and reload its template points. */
   setLetter(letter) {
     this.currentLetter = letter;
-    this.templatePoints = getTemplatePoints(letter);
-    this.templateStrokes = getTemplateStrokes(letter);
+    this.templatePoints = this._getTemplatePoints(letter);
     this.clear();
+  }
+
+  /** Switch to a different font family. Clears per-letter point cache. */
+  setFont(fontFamily) {
+    this.fontFamily = fontFamily;
+    this._pointCache.clear();
+    this.templatePoints = this._getTemplatePoints(this.currentLetter);
+    this.clear();
+  }
+
+  /** Internal: get (cached) template points for a letter in the current font. */
+  _getTemplatePoints(letter) {
+    const key = `${letter}::${this.fontFamily}`;
+    if (!this._pointCache.has(key)) {
+      this._pointCache.set(key, this._extractFn(letter, this.fontFamily));
+    }
+    return this._pointCache.get(key);
   }
 
   clear() {
@@ -235,52 +263,27 @@ export class DrawingCanvas {
   }
 
   _drawTemplate(ctx, s) {
-    const glowSize = Math.max(8, 22 * this.letterScale);
-    const dotSize = Math.max(1.5, 2 * this.letterScale);
-    const startDot = Math.max(3, 5 * this.letterScale);
-    const lineW = Math.max(1.5, 3 * this.letterScale);
+    ctx.save();
 
-    for (const stroke of this.templateStrokes) {
-      if (stroke.length < 2) continue;
+    // Font size uses the same 0.80 ratio as extractFontPoints(), so template
+    // points (0-100 coord space) align with the rendered guide at any letterScale.
+    const fontSize = Math.round(this.letterScale * s * 0.80);
+    ctx.font = `bold ${fontSize}px ${this.fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
-      // Glow effect
-      ctx.strokeStyle = 'rgba(144, 202, 249, 0.08)';
-      ctx.lineWidth = glowSize;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(this._t2c(stroke[0][0]), this._t2c(stroke[0][1]));
-      for (let i = 1; i < stroke.length; i++) {
-        ctx.lineTo(this._t2c(stroke[i][0]), this._t2c(stroke[i][1]));
-      }
-      ctx.stroke();
+    // Soft glow pass
+    ctx.shadowColor = 'rgba(144, 202, 249, 0.25)';
+    ctx.shadowBlur = Math.max(8, fontSize * 0.08);
+    ctx.fillStyle = 'rgba(144, 202, 249, 0.10)';
+    ctx.fillText(this.currentLetter, s / 2, s / 2);
 
-      // Dotted guide path
-      ctx.strokeStyle = 'rgba(144, 202, 249, 0.35)';
-      ctx.lineWidth = lineW;
-      ctx.setLineDash([3, 6]);
-      ctx.beginPath();
-      ctx.moveTo(this._t2c(stroke[0][0]), this._t2c(stroke[0][1]));
-      for (let i = 1; i < stroke.length; i++) {
-        ctx.lineTo(this._t2c(stroke[i][0]), this._t2c(stroke[i][1]));
-      }
-      ctx.stroke();
-      ctx.setLineDash([]);
+    // Main guide pass
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(144, 202, 249, 0.22)';
+    ctx.fillText(this.currentLetter, s / 2, s / 2);
 
-      // Dots at waypoints
-      ctx.fillStyle = 'rgba(144, 202, 249, 0.25)';
-      for (const [x, y] of stroke) {
-        ctx.beginPath();
-        ctx.arc(this._t2c(x), this._t2c(y), dotSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Start dot (brighter)
-      ctx.fillStyle = 'rgba(144, 202, 249, 0.6)';
-      ctx.beginPath();
-      ctx.arc(this._t2c(stroke[0][0]), this._t2c(stroke[0][1]), startDot, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.restore();
   }
 
   _drawUserStrokes(ctx, s) {

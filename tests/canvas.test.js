@@ -27,6 +27,7 @@ function createMockCanvas() {
     arc: vi.fn(),
     stroke: vi.fn(),
     fill: vi.fn(),
+    fillText: vi.fn(),
     setLineDash: vi.fn(),
     setTransform: vi.fn(),
     fillStyle: '',
@@ -35,6 +36,13 @@ function createMockCanvas() {
     lineCap: 'butt',
     lineJoin: 'miter',
     globalAlpha: 1,
+    shadowColor: '',
+    shadowBlur: 0,
+    font: '',
+    textAlign: '',
+    textBaseline: '',
+    save: vi.fn(),
+    restore: vi.fn(),
   };
   el.getContext = vi.fn(() => ctxStub);
 
@@ -43,6 +51,9 @@ function createMockCanvas() {
 
   return { el, ctxStub, container };
 }
+
+// Mock font extraction — returns 3 predictable points
+const mockExtract = () => [[10, 10], [50, 50], [90, 90]];
 
 describe('DrawingCanvas', () => {
   let canvas;
@@ -53,7 +64,7 @@ describe('DrawingCanvas', () => {
     document.body.innerHTML = '';
     mock = createMockCanvas();
     scoreCallback = vi.fn();
-    canvas = new DrawingCanvas(mock.el, scoreCallback);
+    canvas = new DrawingCanvas(mock.el, scoreCallback, { _extractFn: mockExtract });
   });
 
   // ── Initial state ─────────────────────────────────────────────
@@ -70,11 +81,14 @@ describe('DrawingCanvas', () => {
     expect(canvas.currentLetter).toBe('A');
   });
 
+  it('loads template points from font extraction', () => {
+    expect(canvas.templatePoints).toEqual([[10, 10], [50, 50], [90, 90]]);
+  });
+
   // ── clear() ───────────────────────────────────────────────────
 
   describe('clear()', () => {
     it('empties all user strokes', () => {
-      // Simulate some strokes already drawn
       canvas.userStrokes = [
         [{ x: 10, y: 10, pressure: 0.5 }, { x: 20, y: 20, pressure: 0.5 }],
         [{ x: 30, y: 30, pressure: 0.5 }, { x: 40, y: 40, pressure: 0.5 }],
@@ -186,9 +200,32 @@ describe('DrawingCanvas', () => {
       expect(canvas.userStrokes).toEqual([]);
     });
 
-    it('loads new template points', () => {
+    it('loads new template points from font extraction', () => {
       canvas.setLetter('B');
-      expect(canvas.templatePoints.length).toBeGreaterThan(0);
+      expect(canvas.templatePoints).toEqual([[10, 10], [50, 50], [90, 90]]);
+    });
+  });
+
+  // ── setFont() ─────────────────────────────────────────────────
+
+  describe('setFont()', () => {
+    it('updates fontFamily', () => {
+      canvas.setFont('cursive');
+      expect(canvas.fontFamily).toBe('cursive');
+    });
+
+    it('clears the point cache when font changes', () => {
+      canvas._pointCache.set('A::Georgia, serif', [[1, 1]]);
+      canvas.setFont('cursive');
+      expect(canvas._pointCache.size).toBe(1); // repopulated with new font for current letter
+    });
+
+    it('reloads template points for current letter', () => {
+      let callCount = 0;
+      const countingExtract = () => { callCount++; return [[5, 5]]; };
+      canvas._extractFn = countingExtract;
+      canvas.setFont('cursive');
+      expect(canvas.templatePoints).toEqual([[5, 5]]);
     });
   });
 
@@ -226,7 +263,6 @@ describe('DrawingCanvas', () => {
     }
 
     it('records a complete stroke on down→move→up', () => {
-      // Need getBoundingClientRect stub
       mock.el.getBoundingClientRect = () => ({ left: 0, top: 0, width: 400, height: 400 });
 
       mock.el.dispatchEvent(fakePointerEvent('pointerdown', 50, 50));
@@ -250,7 +286,6 @@ describe('DrawingCanvas', () => {
     it('clear after drawing removes all strokes', () => {
       mock.el.getBoundingClientRect = () => ({ left: 0, top: 0, width: 400, height: 400 });
 
-      // Draw two strokes
       mock.el.dispatchEvent(fakePointerEvent('pointerdown', 10, 10));
       mock.el.dispatchEvent(fakePointerEvent('pointermove', 20, 20));
       mock.el.dispatchEvent(fakePointerEvent('pointerup', 20, 20));
@@ -269,7 +304,6 @@ describe('DrawingCanvas', () => {
     it('undo after drawing removes last stroke only', () => {
       mock.el.getBoundingClientRect = () => ({ left: 0, top: 0, width: 400, height: 400 });
 
-      // Draw two strokes
       mock.el.dispatchEvent(fakePointerEvent('pointerdown', 10, 10));
       mock.el.dispatchEvent(fakePointerEvent('pointermove', 20, 20));
       mock.el.dispatchEvent(fakePointerEvent('pointerup', 20, 20));

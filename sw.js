@@ -1,10 +1,11 @@
-const CACHE_NAME = 'hw-trainer-v3';
+const CACHE_NAME = 'hw-trainer-v4';
 const PRECACHE = [
   './',
   './index.html',
   './css/app.css',
   './js/app.js',
   './js/canvas.js',
+  './js/fonts.js',
   './js/scoring.js',
   './js/templates.js',
   './img/icon.svg',
@@ -35,14 +36,21 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Cache-first, with runtime caching for cup-ui component JS
+// Cache-first, with runtime caching for vendor JS and fonts
 self.addEventListener('fetch', e => {
+  const url = e.request.url;
+  const isCacheable =
+    url.includes('/vendor/cup-ui/') ||
+    url.includes('fonts.googleapis.com') ||
+    url.includes('fonts.gstatic.com');
+
+  if (!isCacheable) return; // let browser handle non-cacheable requests normally
+
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(response => {
-        // Runtime-cache vendor JS files for offline
-        if (response.ok && e.request.url.includes('/vendor/cup-ui/')) {
+        if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         }

@@ -37,8 +37,18 @@
     <div id="letter-picker" class="letter-picker" role="tablist" aria-label="Choose a letter to practice"></div>
   </div>
 
-  <div class="size-control">
-    <cup-slider id="size-slider" label="Size" min="15" max="100" value="50" step="5" show-value></cup-slider>
+  <div class="controls-row">
+    <div class="size-control">
+      <cup-slider id="size-slider" label="Size" min="15" max="100" value="50" step="5" show-value></cup-slider>
+    </div>
+    <div class="font-control">
+      <label class="font-control__label" for="font-select">Font</label>
+      <select id="font-select" class="font-select" aria-label="Choose a font"></select>
+      <label class="font-upload-btn" title="Load a custom font file">
+        + Font
+        <input type="file" id="font-file" accept=".ttf,.otf,.woff,.woff2" hidden>
+      </label>
+    </div>
   </div>
 
   <div class="canvas-wrap">

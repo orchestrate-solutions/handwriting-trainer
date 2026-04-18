@@ -1,7 +1,8 @@
 // Main app controller — wires canvas, letter picker, score display
-// Uses cup-ui components: <cup-slider>, <cup-button>, <cup-progress>
+// Uses cup-ui components: <cup-slider>, <cup-button>
 import { DrawingCanvas } from './canvas.js';
 import { LETTER_ORDER } from './templates.js';
+import { FONT_PRESETS, loadCustomFont } from './fonts.js';
 
 let canvas;
 let currentLetterIdx = 0;
@@ -19,6 +20,7 @@ function init() {
   canvas = new DrawingCanvas(canvasEl, score => updateScoreDisplay(score, scoreEls));
 
   buildLetterPicker();
+  buildFontPicker();
   bindButtons();
   bindKeyboard();
   selectLetter(0);
@@ -42,6 +44,49 @@ function init() {
       });
     }
   });
+}
+
+function buildFontPicker() {
+  const select = document.getElementById('font-select');
+  if (!select) return;
+
+  // Populate preset options
+  FONT_PRESETS.forEach(({ label, family }) => {
+    const opt = document.createElement('option');
+    opt.value = family;
+    opt.textContent = label;
+    select.appendChild(opt);
+  });
+
+  select.addEventListener('change', () => {
+    canvas.setFont(select.value);
+  });
+
+  // Custom font file upload
+  const fileInput = document.getElementById('font-file');
+  if (fileInput) {
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      try {
+        const family = await loadCustomFont(file);
+        // Add or update the custom option
+        let customOpt = select.querySelector('option[data-custom]');
+        if (!customOpt) {
+          customOpt = document.createElement('option');
+          customOpt.dataset.custom = '1';
+          select.appendChild(customOpt);
+        }
+        customOpt.value = family;
+        customOpt.textContent = `✨ ${file.name.replace(/\.[^.]+$/, '')}`;
+        select.value = family;
+        canvas.setFont(family);
+      } catch (err) {
+        console.error('Font load failed:', err);
+      }
+      fileInput.value = '';
+    });
+  }
 }
 
 function buildLetterPicker() {
