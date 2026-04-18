@@ -8,13 +8,14 @@ describe('DIFFICULTIES', () => {
     expect(DIFFICULTIES).toHaveLength(4);
   });
 
-  it('each level has id, label, guideOpacity, glowOpacity, glowBlur', () => {
+  it('each level has id, label, guideOpacity, glowOpacity, glowBlur, maxDist', () => {
     for (const d of DIFFICULTIES) {
       expect(typeof d.id).toBe('string');
       expect(typeof d.label).toBe('string');
       expect(typeof d.guideOpacity).toBe('number');
       expect(typeof d.glowOpacity).toBe('number');
       expect(typeof d.glowBlur).toBe('number');
+      expect(typeof d.maxDist).toBe('number');
     }
   });
 
@@ -36,6 +37,19 @@ describe('DIFFICULTIES', () => {
     expect(easy.guideOpacity).toBeGreaterThan(medium.guideOpacity);
     expect(medium.guideOpacity).toBeGreaterThan(hard.guideOpacity);
     expect(hard.guideOpacity).toBeGreaterThan(pro.guideOpacity);
+  });
+
+  it('maxDist (scoring tolerance) decreases from easy to professional', () => {
+    const [easy, medium, hard, pro] = DIFFICULTIES;
+    expect(easy.maxDist).toBeGreaterThan(medium.maxDist);
+    expect(medium.maxDist).toBeGreaterThan(hard.maxDist);
+    expect(hard.maxDist).toBeGreaterThan(pro.maxDist);
+  });
+
+  it('all maxDist values are positive numbers', () => {
+    for (const d of DIFFICULTIES) {
+      expect(d.maxDist).toBeGreaterThan(0);
+    }
   });
 
   it('all opacities are in valid 0–1 range', () => {

@@ -76,17 +76,17 @@ export function pointDistances(userPoints, templatePoints) {
   return userPoints.map(([ux, uy]) => pointToPath(ux, uy, templatePoints));
 }
 
-// Composite score
-export function compositeScore(userPoints, templatePoints) {
-  const acc = accuracyScore(userPoints, templatePoints);
-  const cov = coverageScore(userPoints, templatePoints);
+// Composite score — pass maxDist from difficulty level
+export function compositeScore(userPoints, templatePoints, maxDist = 8) {
+  const acc = accuracyScore(userPoints, templatePoints, maxDist);
+  const cov = coverageScore(userPoints, templatePoints, maxDist);
   const smooth = smoothnessScore(userPoints);
   // Weighted blend: accuracy 45%, coverage 40%, smoothness 15%
   const overall = acc * 0.45 + cov * 0.40 + smooth * 0.15;
   return { accuracy: acc, coverage: cov, smoothness: smooth, overall };
 }
 
-// Color for a given distance (for real-time stroke coloring)
+// Color for a given distance — maxDist from difficulty tightens color bands
 export function distanceColor(dist, maxDist = 8) {
   const ratio = Math.min(dist / maxDist, 1);
   if (ratio < 0.35) return '#66bb6a'; // green — on track

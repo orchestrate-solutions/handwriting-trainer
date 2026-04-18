@@ -1,6 +1,10 @@
 // js/difficulty.js — Difficulty level definitions
-// Each level controls how visible the template guide is.
-// Lower opacity = harder (less guide to trace over).
+// guideOpacity: how visible the template ghost is (lower = harder to see)
+// maxDist: tolerance window for scoring in template-space units (0–100 scale)
+//   Easy   → 12 units — very forgiving, almost anywhere on the letter counts
+//   Medium → 8  units — current baseline
+//   Hard   → 5  units — must stay close to the template
+//   Pro    → 3  units — near-pixel-perfect tracing required
 
 export const DIFFICULTIES = [
   {
@@ -9,6 +13,7 @@ export const DIFFICULTIES = [
     guideOpacity: 0.40,
     glowOpacity: 0.20,
     glowBlur: 0.12,
+    maxDist: 12,
   },
   {
     id: 'medium',
@@ -16,6 +21,7 @@ export const DIFFICULTIES = [
     guideOpacity: 0.22,
     glowOpacity: 0.10,
     glowBlur: 0.08,
+    maxDist: 8,
   },
   {
     id: 'hard',
@@ -23,6 +29,7 @@ export const DIFFICULTIES = [
     guideOpacity: 0.08,
     glowOpacity: 0.04,
     glowBlur: 0.06,
+    maxDist: 5,
   },
   {
     id: 'professional',
@@ -30,6 +37,7 @@ export const DIFFICULTIES = [
     guideOpacity: 0.02,
     glowOpacity: 0.01,
     glowBlur: 0.03,
+    maxDist: 3,
   },
 ];
 

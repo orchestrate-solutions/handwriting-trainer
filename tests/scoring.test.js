@@ -101,6 +101,24 @@ describe('compositeScore', () => {
     const expected = result.accuracy * 0.45 + result.coverage * 0.40 + result.smoothness * 0.15;
     expect(result.overall).toBeCloseTo(expected, 5);
   });
+
+  it('stricter maxDist produces a lower score for imprecise strokes', () => {
+    const template = [[0, 0], [100, 0]];
+    const user = [[50, 6]]; // exactly 6 units off the template path
+    const easyScore = compositeScore(user, template, 12);
+    const proScore  = compositeScore(user, template, 3);
+    expect(proScore.accuracy).toBeLessThan(easyScore.accuracy);
+    expect(proScore.overall).toBeLessThan(easyScore.overall);
+  });
+
+  it('perfect tracing scores 1.0 regardless of maxDist', () => {
+    const template = [[0, 0], [100, 0]];
+    const user = [[0, 0], [50, 0], [100, 0]];
+    const easyScore  = compositeScore(user, template, 12);
+    const proScore   = compositeScore(user, template, 3);
+    expect(easyScore.accuracy).toBe(1);
+    expect(proScore.accuracy).toBe(1);
+  });
 });
 
 // ── pointDistances ────────────────────────────────────────────────

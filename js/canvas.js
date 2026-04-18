@@ -201,7 +201,7 @@ export class DrawingCanvas {
       this.onScoreUpdate({ accuracy: 0, coverage: 0, smoothness: 0, overall: 0 });
       return;
     }
-    const score = compositeScore(allUserPts, this.templatePoints);
+    const score = compositeScore(allUserPts, this.templatePoints, this.difficulty.maxDist);
     this.onScoreUpdate(score);
   }
 
@@ -322,12 +322,11 @@ export class DrawingCanvas {
       const p0 = stroke[i - 1];
       const p1 = stroke[i];
       const dist = dists[i];
-      const color = distanceColor(dist);
 
       // Pressure-based width, scaled to letter size
       const width = strokeW + (p1.pressure || 0.5) * strokeW * 1.5;
 
-      ctx.strokeStyle = color;
+      ctx.strokeStyle = distanceColor(dist, this.difficulty.maxDist);
       ctx.lineWidth = width;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
