@@ -107,6 +107,7 @@ function selectDifficulty(diff) {
 }
 
 
+function buildItemPicker(items) {
   const picker = document.getElementById('letter-picker');
   picker.innerHTML = '';
   items.forEach((item, idx) => {

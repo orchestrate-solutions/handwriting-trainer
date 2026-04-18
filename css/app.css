@@ -74,16 +74,26 @@ body {
   flex-shrink: 0;
 }
 
-/* --- Drill Nav --- */
-.drill-nav {
+/* --- Nav Row (drills + difficulty) --- */
+.nav-row {
   width: 100%;
   max-width: 560px;
   display: flex;
+  align-items: center;
   gap: var(--cup-space-xs);
   padding: var(--cup-space-xs) var(--cup-space-sm) 0;
   flex-shrink: 0;
+  min-height: 0;
+}
+
+/* --- Drill Nav --- */
+.drill-nav {
+  display: flex;
+  gap: var(--cup-space-xs);
+  flex-shrink: 1;
   overflow-x: auto;
   scrollbar-width: none;
+  min-width: 0;
 }
 
 .drill-nav::-webkit-scrollbar { display: none; }
@@ -115,14 +125,13 @@ body {
 
 /* --- Difficulty Nav --- */
 .difficulty-nav {
-  width: 100%;
-  max-width: 560px;
   display: flex;
   gap: var(--cup-space-xs);
-  padding: var(--cup-space-2xs) var(--cup-space-sm) 0;
   flex-shrink: 0;
   overflow-x: auto;
   scrollbar-width: none;
+  border-left: 1px solid var(--cup-color-border);
+  padding-left: var(--cup-space-xs);
 }
 
 .difficulty-nav::-webkit-scrollbar { display: none; }
