@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hw-trainer-v2';
+const CACHE_NAME = 'hw-trainer-v3';
 const PRECACHE = [
   './',
   './index.html',

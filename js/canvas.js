@@ -121,6 +121,8 @@ export class DrawingCanvas {
     if (e.pointerType === 'pen') this.activePenId = null;
     this.isDrawing = false;
 
+    try { this.canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+
     if (this.activeStroke && this.activeStroke.length > 1) {
       this.userStrokes.push(this.activeStroke);
     }
@@ -140,6 +142,7 @@ export class DrawingCanvas {
     this.userStrokes = [];
     this.activeStroke = null;
     this.isDrawing = false;
+    this.activePenId = null;
     this.onScoreUpdate({ accuracy: 0, coverage: 0, smoothness: 0, overall: 0 });
     this.render();
   }

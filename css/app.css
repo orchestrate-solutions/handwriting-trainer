@@ -162,6 +162,10 @@ body {
   flex: 1;
 }
 
+.controls cup-button .cup-button {
+  width: 100%;
+}
+
 /* --- Hint --- */
 .hint {
   width: 100%;

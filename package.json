@@ -1,0 +1,26 @@
+{
+  "name": "handwriting-trainer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sw.js",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orchestrate-solutions/handwriting-trainer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/orchestrate-solutions/handwriting-trainer/issues"
+  },
+  "homepage": "https://github.com/orchestrate-solutions/handwriting-trainer#readme",
+  "devDependencies": {
+    "jsdom": "^29.0.2",
+    "vitest": "^4.1.4"
+  }
+}
