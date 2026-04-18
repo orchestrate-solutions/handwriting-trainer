@@ -33,8 +33,10 @@
     <cup-button variant="outline" size="sm" id="install-btn" hidden>Install</cup-button>
   </header>
 
+  <nav class="drill-nav" id="drill-nav" aria-label="Practice drills"></nav>
+
   <div class="letter-picker-wrap">
-    <div id="letter-picker" class="letter-picker" role="tablist" aria-label="Choose a letter to practice"></div>
+    <div id="letter-picker" class="letter-picker" role="tablist" aria-label="Choose an item to practice"></div>
   </div>
 
   <div class="controls-row">
@@ -87,7 +89,7 @@
   <div class="hint">
     Trace the guide with your stylus, finger, or mouse.
     <br>
-    <kbd>←</kbd> <kbd>→</kbd> change letter · <kbd>Esc</kbd> clear · <kbd>⌘Z</kbd> undo · Press any letter key
+    <kbd>←</kbd> <kbd>→</kbd> prev/next · <kbd>Esc</kbd> clear · <kbd>⌘Z</kbd> undo · type any key to jump
   </div>
 
   <!-- cup-ui web components -->

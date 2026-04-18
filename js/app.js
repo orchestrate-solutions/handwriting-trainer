@@ -1,11 +1,12 @@
-// Main app controller — wires canvas, letter picker, score display
+// Main app controller — wires canvas, drill picker, score display
 // Uses cup-ui components: <cup-slider>, <cup-button>
 import { DrawingCanvas } from './canvas.js';
-import { LETTER_ORDER } from './templates.js';
+import { DRILLS, DEFAULT_DRILL } from './drills.js';
 import { FONT_PRESETS, loadCustomFont } from './fonts.js';
 
 let canvas;
-let currentLetterIdx = 0;
+let currentDrill = DEFAULT_DRILL;
+let currentItemIdx = 0;
 
 function init() {
   const canvasEl = document.getElementById('draw-canvas');
@@ -19,11 +20,12 @@ function init() {
 
   canvas = new DrawingCanvas(canvasEl, score => updateScoreDisplay(score, scoreEls));
 
-  buildLetterPicker();
+  buildDrillNav();
+  buildItemPicker(currentDrill.items);
   buildFontPicker();
   bindButtons();
   bindKeyboard();
-  selectLetter(0);
+  selectItem(0);
 
   // Register service worker
   if ('serviceWorker' in navigator) {
@@ -43,6 +45,43 @@ function init() {
         deferredPrompt.userChoice.then(() => { btn.hidden = true; });
       });
     }
+  });
+}
+
+function buildDrillNav() {
+  const nav = document.getElementById('drill-nav');
+  if (!nav) return;
+  DRILLS.forEach(drill => {
+    const btn = document.createElement('button');
+    btn.className = 'drill-btn';
+    btn.textContent = drill.label;
+    btn.dataset.id = drill.id;
+    btn.classList.toggle('active', drill.id === currentDrill.id);
+    btn.addEventListener('click', () => selectDrill(drill));
+    nav.appendChild(btn);
+  });
+}
+
+function selectDrill(drill) {
+  currentDrill = drill;
+  currentItemIdx = 0;
+  document.querySelectorAll('.drill-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.id === drill.id);
+  });
+  buildItemPicker(drill.items);
+  selectItem(0);
+}
+
+function buildItemPicker(items) {
+  const picker = document.getElementById('letter-picker');
+  picker.innerHTML = '';
+  items.forEach((item, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'letter-btn';
+    btn.textContent = item;
+    btn.dataset.idx = idx;
+    btn.addEventListener('click', () => selectItem(idx));
+    picker.appendChild(btn);
   });
 }
 
@@ -90,21 +129,13 @@ function buildFontPicker() {
 }
 
 function buildLetterPicker() {
-  const picker = document.getElementById('letter-picker');
-  LETTER_ORDER.forEach((letter, idx) => {
-    const btn = document.createElement('button');
-    btn.className = 'letter-btn';
-    btn.textContent = letter;
-    btn.dataset.idx = idx;
-    btn.addEventListener('click', () => selectLetter(idx));
-    picker.appendChild(btn);
-  });
+  buildItemPicker(currentDrill.items);
 }
 
-function selectLetter(idx) {
-  currentLetterIdx = idx;
-  const letter = LETTER_ORDER[idx];
-  canvas.setLetter(letter);
+function selectItem(idx) {
+  currentItemIdx = idx;
+  const item = currentDrill.items[idx];
+  canvas.setLetter(item);
 
   document.querySelectorAll('.letter-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === idx);
@@ -114,14 +145,17 @@ function selectLetter(idx) {
   if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
 
+// Keep alias for any external callers / tests
+function selectLetter(idx) { selectItem(idx); }
+
 function bindButtons() {
   document.getElementById('btn-clear').addEventListener('click', () => canvas.clear());
   document.getElementById('btn-undo').addEventListener('click', () => canvas.undo());
   document.getElementById('btn-prev').addEventListener('click', () => {
-    selectLetter((currentLetterIdx - 1 + 26) % 26);
+    selectItem((currentItemIdx - 1 + currentDrill.items.length) % currentDrill.items.length);
   });
   document.getElementById('btn-next').addEventListener('click', () => {
-    selectLetter((currentLetterIdx + 1) % 26);
+    selectItem((currentItemIdx + 1) % currentDrill.items.length);
   });
 
   // cup-slider emits 'input' from its internal <input>
@@ -135,14 +169,18 @@ function bindButtons() {
 
 function bindKeyboard() {
   document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft') selectLetter((currentLetterIdx - 1 + 26) % 26);
-    else if (e.key === 'ArrowRight') selectLetter((currentLetterIdx + 1) % 26);
+    const len = currentDrill.items.length;
+    if (e.key === 'ArrowLeft') selectItem((currentItemIdx - 1 + len) % len);
+    else if (e.key === 'ArrowRight') selectItem((currentItemIdx + 1) % len);
     else if (e.key === 'Escape' || e.key === 'Delete') canvas.clear();
     else if (e.key === 'z' && (e.metaKey || e.ctrlKey)) canvas.undo();
-    else {
-      const upper = e.key.toUpperCase();
-      const idx = LETTER_ORDER.indexOf(upper);
-      if (idx !== -1) selectLetter(idx);
+    // Letter-key shortcut only applies to single-character drills
+    else if (currentDrill.items[0]?.length === 1) {
+      const key = e.key.length === 1 ? e.key : null;
+      if (key) {
+        const idx = currentDrill.items.indexOf(key);
+        if (idx !== -1) selectItem(idx);
+      }
     }
   });
 }

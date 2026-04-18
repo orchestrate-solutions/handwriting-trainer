@@ -1,10 +1,11 @@
-const CACHE_NAME = 'hw-trainer-v4';
+const CACHE_NAME = 'hw-trainer-v5';
 const PRECACHE = [
   './',
   './index.html',
   './css/app.css',
   './js/app.js',
   './js/canvas.js',
+  './js/drills.js',
   './js/fonts.js',
   './js/scoring.js',
   './js/templates.js',

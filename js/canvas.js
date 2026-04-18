@@ -1,5 +1,4 @@
 // Canvas drawing engine — Pointer Events, DPI-aware, pressure-sensitive
-import { LETTER_ORDER } from './templates.js';
 import { pointDistances, distanceColor, compositeScore } from './scoring.js';
 import { extractFontPoints, DEFAULT_FONT } from './fonts.js';
 
@@ -264,13 +263,18 @@ export class DrawingCanvas {
 
   _drawTemplate(ctx, s) {
     ctx.save();
-
-    // Font size uses the same 0.80 ratio as extractFontPoints(), so template
-    // points (0-100 coord space) align with the rendered guide at any letterScale.
-    const fontSize = Math.round(this.letterScale * s * 0.80);
-    ctx.font = `bold ${fontSize}px ${this.fontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+
+    // Auto-fit: both match the same 0.80 / 0.88 ratio as extractFontPoints()
+    // so template points (used for scoring) align with the rendered guide.
+    let fontSize = Math.round(this.letterScale * s * 0.80);
+    const maxWidth = this.letterScale * s * 0.88;
+    ctx.font = `bold ${fontSize}px ${this.fontFamily}`;
+    while (ctx.measureText(this.currentLetter).width > maxWidth && fontSize > 10) {
+      fontSize -= 2;
+      ctx.font = `bold ${fontSize}px ${this.fontFamily}`;
+    }
 
     // Soft glow pass
     ctx.shadowColor = 'rgba(144, 202, 249, 0.25)';

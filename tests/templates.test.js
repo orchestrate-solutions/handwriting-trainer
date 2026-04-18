@@ -1,24 +1,15 @@
-// Unit tests for templates.js — letter set definition
+// templates.js re-exports from drills.js — verify the bridge works
 import { describe, it, expect } from 'vitest';
-import { LETTER_ORDER } from '../js/templates.js';
+import { DRILLS, DEFAULT_DRILL } from '../js/templates.js';
 
-describe('LETTER_ORDER', () => {
-  it('has 26 letters', () => {
-    expect(LETTER_ORDER).toHaveLength(26);
+describe('templates re-exports', () => {
+  it('exports DRILLS array', () => {
+    expect(Array.isArray(DRILLS)).toBe(true);
+    expect(DRILLS.length).toBeGreaterThan(0);
   });
 
-  it('starts with A and ends with Z', () => {
-    expect(LETTER_ORDER[0]).toBe('A');
-    expect(LETTER_ORDER[25]).toBe('Z');
-  });
-
-  it('contains only uppercase single letters', () => {
-    for (const l of LETTER_ORDER) {
-      expect(l).toMatch(/^[A-Z]$/);
-    }
-  });
-
-  it('contains no duplicates', () => {
-    expect(new Set(LETTER_ORDER).size).toBe(26);
+  it('exports DEFAULT_DRILL', () => {
+    expect(DEFAULT_DRILL).toBeDefined();
+    expect(DEFAULT_DRILL.id).toBe('upper');
   });
 });

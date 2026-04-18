@@ -1,4 +1,3 @@
-// js/templates.js — Letter set definition
-// Template shapes are now derived from font rendering (see fonts.js).
-
-export const LETTER_ORDER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+// js/templates.js — re-exports drill packs for backward compatibility.
+// See js/drills.js for the full pack definitions.
+export { DRILLS, DEFAULT_DRILL } from './drills.js';

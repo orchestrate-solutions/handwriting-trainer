@@ -28,6 +28,7 @@ function createMockCanvas() {
     stroke: vi.fn(),
     fill: vi.fn(),
     fillText: vi.fn(),
+    measureText: vi.fn(() => ({ width: 0 })),
     setLineDash: vi.fn(),
     setTransform: vi.fn(),
     fillStyle: '',

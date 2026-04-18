@@ -47,7 +47,14 @@ export function extractFontPoints(letter, fontFamily) {
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = `bold ${Math.round(SIZE * 0.80)}px ${fontFamily}`;
+
+  // Auto-fit: start at 80% of canvas height, shrink until text fits in 88% of width
+  let fontSize = Math.round(SIZE * 0.80);
+  ctx.font = `bold ${fontSize}px ${fontFamily}`;
+  while (ctx.measureText(letter).width > SIZE * 0.88 && fontSize > 16) {
+    fontSize -= 4;
+    ctx.font = `bold ${fontSize}px ${fontFamily}`;
+  }
   ctx.fillText(letter, SIZE / 2, SIZE / 2);
 
   const data = ctx.getImageData(0, 0, SIZE, SIZE).data;

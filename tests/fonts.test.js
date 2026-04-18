@@ -18,6 +18,7 @@ function makeMockCtx() {
     textBaseline: '',
     fillRect: vi.fn(),
     fillText: vi.fn(),
+    measureText: vi.fn(() => ({ width: 0 })),
     getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(400 * 400 * 4) })),
   };
 }

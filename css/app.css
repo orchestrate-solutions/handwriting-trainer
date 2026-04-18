@@ -43,6 +43,45 @@ body {
   flex-shrink: 0;
 }
 
+/* --- Drill Nav --- */
+.drill-nav {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  gap: var(--cup-space-xs);
+  padding: var(--cup-space-xs) var(--cup-space-sm) 0;
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.drill-nav::-webkit-scrollbar { display: none; }
+
+.drill-btn {
+  flex-shrink: 0;
+  padding: 3px var(--cup-space-sm);
+  border-radius: var(--cup-radius-full);
+  border: 1.5px solid var(--cup-color-border);
+  background: var(--cup-color-surface);
+  color: var(--cup-color-placeholder);
+  font-size: var(--cup-font-size-xs);
+  font-weight: var(--cup-font-weight-bold);
+  cursor: pointer;
+  transition: all var(--cup-transition-fast);
+  white-space: nowrap;
+}
+
+.drill-btn:hover {
+  border-color: var(--cup-color-primary);
+  color: var(--cup-color-on-surface);
+}
+
+.drill-btn.active {
+  background: var(--cup-color-primary);
+  border-color: var(--cup-color-primary);
+  color: var(--cup-color-on-primary);
+}
+
 .letter-picker {
   display: flex;
   gap: var(--cup-space-xs);
@@ -56,8 +95,9 @@ body {
 
 .letter-btn {
   flex-shrink: 0;
-  width: 32px;
+  min-width: 32px;
   height: 32px;
+  padding: 0 6px;
   border-radius: var(--cup-radius-sm);
   border: 1.5px solid var(--cup-color-border);
   background: var(--cup-color-surface);
@@ -251,7 +291,7 @@ body {
 /* --- Responsive --- */
 @media (max-width: 400px) {
   .letter-btn {
-    width: 28px;
+    min-width: 28px;
     height: 28px;
   }
   .score-value { font-size: var(--cup-font-size-sm); }
