@@ -6,6 +6,7 @@ body {
   flex-direction: column;
   align-items: center;
   overflow: hidden;
+  overscroll-behavior: none;
   background: var(--cup-color-surface);
 }
 
