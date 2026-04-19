@@ -169,9 +169,10 @@ export class DrawingCanvas {
     this.clear();
   }
 
-  /** Update difficulty (changes guide opacity). Triggers a re-render. */
+  /** Update difficulty (changes guide opacity + recalculates score). Triggers a re-render. */
   setDifficulty(difficulty) {
     this.difficulty = difficulty;
+    this._updateScore();
     this.render();
   }
 

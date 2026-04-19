@@ -318,4 +318,32 @@ describe('DrawingCanvas', () => {
       expect(canvas.userStrokes).toHaveLength(1);
     });
   });
+
+  describe('setDifficulty()', () => {
+    it('updates the difficulty and triggers score recalculation', () => {
+      const scores = [];
+      canvas.onScoreUpdate = s => scores.push(s);
+
+      // Put a stroke on the canvas to give the score something to compute
+      canvas.userStrokes = [
+        [{ x: 50, y: 50, pressure: 0.5 }, { x: 60, y: 60, pressure: 0.5 }],
+      ];
+
+      const { DIFFICULTIES } = require('../js/difficulty.js');
+      canvas.setDifficulty(DIFFICULTIES[0]); // Easy
+      canvas.setDifficulty(DIFFICULTIES[3]); // Pro
+
+      // Score should have been emitted for each difficulty change
+      expect(scores.length).toBeGreaterThanOrEqual(2);
+      expect(canvas.difficulty).toBe(DIFFICULTIES[3]);
+    });
+
+    it('changes maxDist used in scoring when difficulty changes', () => {
+      const { DIFFICULTIES } = require('../js/difficulty.js');
+      canvas.setDifficulty(DIFFICULTIES[0]); // Easy — maxDist=12
+      expect(canvas.difficulty.maxDist).toBe(12);
+      canvas.setDifficulty(DIFFICULTIES[3]); // Pro — maxDist=3
+      expect(canvas.difficulty.maxDist).toBe(3);
+    });
+  });
 });
