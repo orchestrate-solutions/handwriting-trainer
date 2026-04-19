@@ -308,6 +308,11 @@ export class DrawingCanvas {
     ctx.strokeStyle = `rgba(144, 202, 249, ${this.difficulty.guideOpacity})`;
     ctx.strokeText(this.currentLetter, s / 2, s / 2);
 
+    // Center line — thin stroke along the font path midline
+    ctx.lineWidth = Math.max(0.5, sw * 0.15);
+    ctx.strokeStyle = `rgba(200, 225, 255, ${this.difficulty.guideOpacity * 1.2})`;
+    ctx.strokeText(this.currentLetter, s / 2, s / 2);
+
     ctx.restore();
   }
 

@@ -33,11 +33,11 @@ describe('DIFFICULTIES', () => {
     expect(ids).toContain('professional');
   });
 
-  it('guide opacity decreases from easy to professional', () => {
+  it('guide opacity is uniform across all levels', () => {
     const [easy, medium, hard, pro] = DIFFICULTIES;
-    expect(easy.guideOpacity).toBeGreaterThan(medium.guideOpacity);
-    expect(medium.guideOpacity).toBeGreaterThan(hard.guideOpacity);
-    expect(hard.guideOpacity).toBeGreaterThan(pro.guideOpacity);
+    expect(easy.guideOpacity).toBe(medium.guideOpacity);
+    expect(medium.guideOpacity).toBe(hard.guideOpacity);
+    expect(hard.guideOpacity).toBe(pro.guideOpacity);
   });
 
   it('maxDist (scoring tolerance) decreases from easy to professional', () => {
