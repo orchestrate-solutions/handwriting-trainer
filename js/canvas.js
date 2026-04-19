@@ -33,6 +33,9 @@ export class DrawingCanvas {
     // Difficulty — controls template guide opacity
     this.difficulty = options.difficulty || DEFAULT_DIFFICULTY;
 
+    // Show skeleton overlay (centerline dots)
+    this.showSkeleton = false;
+
     // Template points (in 0-100 space) for the current letter + font
     this.templatePoints = [];
 
@@ -301,6 +304,19 @@ export class DrawingCanvas {
     ctx.shadowBlur = 0;
     ctx.fillStyle = `rgba(144, 202, 249, ${this.difficulty.guideOpacity})`;
     ctx.fillText(this.currentLetter, s / 2, s / 2);
+
+    // Skeleton overlay — draw centerline dots from template points
+    if (this.showSkeleton && this.templatePoints.length > 0) {
+      ctx.fillStyle = 'rgba(255, 200, 60, 0.7)';
+      const r = Math.max(0.8, this.letterScale * s / 250);
+      for (const [tx, ty] of this.templatePoints) {
+        const cx = this._t2c(tx);
+        const cy = this._t2c(ty);
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
     ctx.restore();
   }

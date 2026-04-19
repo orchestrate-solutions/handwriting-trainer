@@ -273,6 +273,35 @@ body {
   color: var(--cup-color-on-surface);
 }
 
+/* --- Skeleton Toggle --- */
+.skeleton-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 var(--cup-space-xs);
+  border-radius: var(--cup-radius-sm);
+  border: 1.5px solid var(--cup-color-border);
+  background: var(--cup-color-surface);
+  color: var(--cup-color-placeholder);
+  font-size: var(--cup-font-size-xs);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--cup-transition-fast), color var(--cup-transition-fast), background var(--cup-transition-fast);
+}
+.skeleton-toggle:hover {
+  border-color: var(--cup-color-primary);
+  color: var(--cup-color-on-surface);
+}
+.skeleton-toggle.active {
+  border-color: #ffc83d;
+  color: #ffc83d;
+  background: rgba(255, 200, 60, 0.1);
+}
+.skeleton-toggle svg {
+  flex-shrink: 0;
+}
+
 /* --- Canvas Area --- */
 .canvas-wrap {
   width: 100%;

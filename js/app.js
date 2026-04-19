@@ -226,6 +226,17 @@ function bindButtons() {
     canvas.setScale(pct / 100);
   });
 
+  // Skeleton path toggle
+  const skelBtn = document.getElementById('skeleton-toggle');
+  if (skelBtn) {
+    skelBtn.addEventListener('click', () => {
+      canvas.showSkeleton = !canvas.showSkeleton;
+      skelBtn.setAttribute('aria-pressed', String(canvas.showSkeleton));
+      skelBtn.classList.toggle('active', canvas.showSkeleton);
+      canvas.render();
+    });
+  }
+
   // History panel
   const historyBtn = document.getElementById('history-btn');
   const historyPanel = document.getElementById('history-panel');
