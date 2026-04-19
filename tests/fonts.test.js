@@ -25,7 +25,7 @@ function makeMockCtx() {
     fillText: vi.fn(),
     strokeText: vi.fn(),
     measureText: vi.fn(() => ({ width: 0 })),
-    getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(400 * 400 * 4) })),
+    getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(200 * 200 * 4) })),
   };
 }
 
@@ -83,10 +83,15 @@ describe('extractFontPoints', () => {
   });
 
   it('all returned points are [x, y] pairs in 0–100', () => {
-    // Return one lit pixel at position (200, 200) in a 400×400 canvas
+    // Create a small 3×3 block of lit pixels at (100,100) in a 200×200 canvas
+    // so at least one pixel survives Zhang-Suen thinning (center of the block)
     const mockCtx = makeMockCtx();
-    const imgData = new Uint8ClampedArray(400 * 400 * 4);
-    imgData[(200 * 400 + 200) * 4] = 255; // lit pixel at (200, 200)
+    const imgData = new Uint8ClampedArray(200 * 200 * 4);
+    for (let r = 99; r <= 101; r++) {
+      for (let c = 99; c <= 101; c++) {
+        imgData[(r * 200 + c) * 4] = 255;
+      }
+    }
     mockCtx.getImageData = vi.fn(() => ({ data: imgData }));
 
     const createSpy = vi.spyOn(document, 'createElement').mockImplementation((tag) => {

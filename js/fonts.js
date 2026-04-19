@@ -45,8 +45,79 @@ export const CUSTOM_FONT_NAME = 'custom-hw-font';
 const _cache = new Map();
 
 /**
+ * Zhang-Suen thinning — reduce a binary image to a 1-pixel-wide skeleton.
+ * Operates in-place on a Uint8Array of 0/1 values (width × height).
+ * Returns the same array, mutated.
+ */
+function thinZhangSuen(img, w, h) {
+  const idx = (r, c) => r * w + c;
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+
+    // Sub-iteration 1
+    const remove1 = [];
+    for (let r = 1; r < h - 1; r++) {
+      for (let c = 1; c < w - 1; c++) {
+        if (!img[idx(r, c)]) continue;
+        const p2 = img[idx(r - 1, c)];
+        const p3 = img[idx(r - 1, c + 1)];
+        const p4 = img[idx(r, c + 1)];
+        const p5 = img[idx(r + 1, c + 1)];
+        const p6 = img[idx(r + 1, c)];
+        const p7 = img[idx(r + 1, c - 1)];
+        const p8 = img[idx(r, c - 1)];
+        const p9 = img[idx(r - 1, c - 1)];
+        const B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
+        if (B < 2 || B > 6) continue;
+        const A = (!p2 && p3) + (!p3 && p4) + (!p4 && p5) + (!p5 && p6)
+                + (!p6 && p7) + (!p7 && p8) + (!p8 && p9) + (!p9 && p2);
+        if (A !== 1) continue;
+        if (p2 && p4 && p6) continue;
+        if (p4 && p6 && p8) continue;
+        remove1.push(idx(r, c));
+      }
+    }
+    for (const i of remove1) { img[i] = 0; changed = true; }
+
+    // Sub-iteration 2
+    const remove2 = [];
+    for (let r = 1; r < h - 1; r++) {
+      for (let c = 1; c < w - 1; c++) {
+        if (!img[idx(r, c)]) continue;
+        const p2 = img[idx(r - 1, c)];
+        const p3 = img[idx(r - 1, c + 1)];
+        const p4 = img[idx(r, c + 1)];
+        const p5 = img[idx(r + 1, c + 1)];
+        const p6 = img[idx(r + 1, c)];
+        const p7 = img[idx(r + 1, c - 1)];
+        const p8 = img[idx(r, c - 1)];
+        const p9 = img[idx(r - 1, c - 1)];
+        const B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
+        if (B < 2 || B > 6) continue;
+        const A = (!p2 && p3) + (!p3 && p4) + (!p4 && p5) + (!p5 && p6)
+                + (!p6 && p7) + (!p7 && p8) + (!p8 && p9) + (!p9 && p2);
+        if (A !== 1) continue;
+        if (p2 && p4 && p8) continue;
+        if (p2 && p6 && p8) continue;
+        remove2.push(idx(r, c));
+      }
+    }
+    for (const i of remove2) { img[i] = 0; changed = true; }
+  }
+
+  return img;
+}
+
+/**
  * Extract template points for a letter rendered in the given CSS font-family.
  * Returns a flat array of [x, y] pairs in 0–100 coordinate space.
+ *
+ * Uses Zhang-Suen thinning to reduce the filled letterform to its 1-pixel
+ * skeleton — the medial axis that represents actual pen stroke paths.
+ * This produces coverage targets that match handwriting strokes rather than
+ * penalizing users for not tracing every edge of a thick printed glyph.
  *
  * Coordinate math: both extraction and DrawingCanvas._drawTemplate() use
  * the same SIZE_RATIO (0.80) and center positioning, so template points
@@ -58,8 +129,8 @@ export function extractFontPoints(letter, fontFamily) {
   const key = `${letter}::${fontFamily}`;
   if (_cache.has(key)) return _cache.get(key);
 
-  const SIZE = 400;  // render resolution (4× for quality)
-  const STEP = 4;   // sample every STEP px → ~100×100 effective grid
+  const SIZE = 200;  // render resolution (smaller for thinning perf)
+  const STEP = 2;    // sample every STEP px from skeleton
 
   const canvas = document.createElement('canvas');
   canvas.width = SIZE;
@@ -80,20 +151,25 @@ export function extractFontPoints(letter, fontFamily) {
     ctx.font = `bold ${fontSize}px ${fontFamily}`;
   }
 
-  // Use strokeText to extract the outline/centerline — thinner target area
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = Math.max(2, fontSize * 0.04);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeText(letter, SIZE / 2, SIZE / 2);
+  // Render filled letter — full shape for skeletonization
+  ctx.fillStyle = '#fff';
+  ctx.fillText(letter, SIZE / 2, SIZE / 2);
 
+  // Build binary image from red channel
   const data = ctx.getImageData(0, 0, SIZE, SIZE).data;
-  const points = [];
+  const binary = new Uint8Array(SIZE * SIZE);
+  for (let i = 0; i < SIZE * SIZE; i++) {
+    binary[i] = data[i * 4] > 128 ? 1 : 0;
+  }
 
+  // Thin to skeleton (medial axis)
+  thinZhangSuen(binary, SIZE, SIZE);
+
+  // Sample skeleton points
+  const points = [];
   for (let row = 0; row < SIZE; row += STEP) {
     for (let col = 0; col < SIZE; col += STEP) {
-      if (data[(row * SIZE + col) * 4] > 128) {
-        // Normalize pixel coord → 0–100 template space
+      if (binary[row * SIZE + col]) {
         points.push([col / SIZE * 100, row / SIZE * 100]);
       }
     }
