@@ -291,16 +291,22 @@ export class DrawingCanvas {
       ctx.font = `bold ${fontSize}px ${this.fontFamily}`;
     }
 
+    // Scale guide stroke width proportional to canvas size
+    const sw = this.difficulty.guideStrokeWidth * (this.letterScale * s / 400);
+    ctx.lineWidth = sw;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
     // Soft glow pass
     ctx.shadowColor = 'rgba(144, 202, 249, 0.25)';
     ctx.shadowBlur = Math.max(4, fontSize * this.difficulty.glowBlur);
-    ctx.fillStyle = `rgba(144, 202, 249, ${this.difficulty.glowOpacity})`;
-    ctx.fillText(this.currentLetter, s / 2, s / 2);
+    ctx.strokeStyle = `rgba(144, 202, 249, ${this.difficulty.glowOpacity})`;
+    ctx.strokeText(this.currentLetter, s / 2, s / 2);
 
     // Main guide pass
     ctx.shadowBlur = 0;
-    ctx.fillStyle = `rgba(144, 202, 249, ${this.difficulty.guideOpacity})`;
-    ctx.fillText(this.currentLetter, s / 2, s / 2);
+    ctx.strokeStyle = `rgba(144, 202, 249, ${this.difficulty.guideOpacity})`;
+    ctx.strokeText(this.currentLetter, s / 2, s / 2);
 
     ctx.restore();
   }

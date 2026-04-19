@@ -2,7 +2,7 @@
 // Uses cup-ui components: <cup-slider>, <cup-button>
 import { DrawingCanvas } from './canvas.js';
 import { DRILLS, DEFAULT_DRILL } from './drills.js';
-import { FONT_PRESETS, loadCustomFont } from './fonts.js';
+import { getAvailableFonts, loadCustomFont } from './fonts.js';
 import { DIFFICULTIES, DEFAULT_DIFFICULTY } from './difficulty.js';
 import { saveEntry, getHistory, clearHistory } from './history.js';
 
@@ -124,8 +124,9 @@ function buildFontPicker() {
   const select = document.getElementById('font-select');
   if (!select) return;
 
-  // Populate preset options
-  FONT_PRESETS.forEach(({ label, family }) => {
+  // Populate preset options — only fonts available on this device
+  const availableFonts = getAvailableFonts();
+  availableFonts.forEach(({ label, family }) => {
     const opt = document.createElement('option');
     opt.value = family;
     opt.textContent = label;

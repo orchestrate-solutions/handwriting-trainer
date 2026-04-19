@@ -8,13 +8,14 @@ describe('DIFFICULTIES', () => {
     expect(DIFFICULTIES).toHaveLength(4);
   });
 
-  it('each level has id, label, guideOpacity, glowOpacity, glowBlur, maxDist', () => {
+  it('each level has id, label, guideOpacity, glowOpacity, glowBlur, guideStrokeWidth, maxDist', () => {
     for (const d of DIFFICULTIES) {
       expect(typeof d.id).toBe('string');
       expect(typeof d.label).toBe('string');
       expect(typeof d.guideOpacity).toBe('number');
       expect(typeof d.glowOpacity).toBe('number');
       expect(typeof d.glowBlur).toBe('number');
+      expect(typeof d.guideStrokeWidth).toBe('number');
       expect(typeof d.maxDist).toBe('number');
     }
   });
@@ -44,6 +45,13 @@ describe('DIFFICULTIES', () => {
     expect(easy.maxDist).toBeGreaterThan(medium.maxDist);
     expect(medium.maxDist).toBeGreaterThan(hard.maxDist);
     expect(hard.maxDist).toBeGreaterThan(pro.maxDist);
+  });
+
+  it('guideStrokeWidth decreases from easy to professional', () => {
+    const [easy, medium, hard, pro] = DIFFICULTIES;
+    expect(easy.guideStrokeWidth).toBeGreaterThan(medium.guideStrokeWidth);
+    expect(medium.guideStrokeWidth).toBeGreaterThan(hard.guideStrokeWidth);
+    expect(hard.guideStrokeWidth).toBeGreaterThan(pro.guideStrokeWidth);
   });
 
   it('all maxDist values are positive numbers', () => {

@@ -1,10 +1,7 @@
 // js/difficulty.js — Difficulty level definitions
 // guideOpacity: how visible the template ghost is (lower = harder to see)
+// guideStrokeWidth: stroke-based guide line width (px at 400px canvas, scaled)
 // maxDist: tolerance window for scoring in template-space units (0–100 scale)
-//   Easy   → 12 units — very forgiving, almost anywhere on the letter counts
-//   Medium → 8  units — current baseline
-//   Hard   → 5  units — must stay close to the template
-//   Pro    → 3  units — near-pixel-perfect tracing required
 
 export const DIFFICULTIES = [
   {
@@ -13,6 +10,7 @@ export const DIFFICULTIES = [
     guideOpacity: 0.40,
     glowOpacity: 0.20,
     glowBlur: 0.12,
+    guideStrokeWidth: 6,
     maxDist: 12,
   },
   {
@@ -21,6 +19,7 @@ export const DIFFICULTIES = [
     guideOpacity: 0.22,
     glowOpacity: 0.10,
     glowBlur: 0.08,
+    guideStrokeWidth: 3,
     maxDist: 8,
   },
   {
@@ -29,6 +28,7 @@ export const DIFFICULTIES = [
     guideOpacity: 0.08,
     glowOpacity: 0.04,
     glowBlur: 0.06,
+    guideStrokeWidth: 1.5,
     maxDist: 5,
   },
   {
@@ -37,6 +37,7 @@ export const DIFFICULTIES = [
     guideOpacity: 0.02,
     glowOpacity: 0.01,
     glowBlur: 0.03,
+    guideStrokeWidth: 0.75,
     maxDist: 3,
   },
 ];

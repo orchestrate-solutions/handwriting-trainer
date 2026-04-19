@@ -4,6 +4,7 @@ import {
   FONT_PRESETS,
   DEFAULT_FONT,
   CUSTOM_FONT_NAME,
+  getAvailableFonts,
   extractFontPoints,
   clearFontCache,
 } from '../js/fonts.js';
@@ -13,11 +14,16 @@ import {
 function makeMockCtx() {
   return {
     fillStyle: '',
+    strokeStyle: '',
     font: '',
     textAlign: '',
     textBaseline: '',
+    lineWidth: 1,
+    lineCap: 'butt',
+    lineJoin: 'miter',
     fillRect: vi.fn(),
     fillText: vi.fn(),
+    strokeText: vi.fn(),
     measureText: vi.fn(() => ({ width: 0 })),
     getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(400 * 400 * 4) })),
   };
@@ -127,5 +133,32 @@ describe('clearFontCache', () => {
     extractFontPoints('E', 'Georgia, serif'); // cache cleared → new extraction
     expect(spy.mock.calls.length).toBeGreaterThan(after1);
     spy.mockRestore();
+  });
+});
+
+describe('getAvailableFonts', () => {
+  beforeEach(() => {
+    // jsdom lacks document.fonts — polyfill it
+    if (!document.fonts) {
+      document.fonts = { check: () => true };
+    }
+  });
+
+  it('returns a non-empty array', () => {
+    const fonts = getAvailableFonts();
+    expect(Array.isArray(fonts)).toBe(true);
+    expect(fonts.length).toBeGreaterThan(0);
+  });
+
+  it('always includes the default font', () => {
+    const fonts = getAvailableFonts();
+    expect(fonts.some(f => f.family === DEFAULT_FONT)).toBe(true);
+  });
+
+  it('each entry has label and family', () => {
+    for (const f of getAvailableFonts()) {
+      expect(typeof f.label).toBe('string');
+      expect(typeof f.family).toBe('string');
+    }
   });
 });

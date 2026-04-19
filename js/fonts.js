@@ -18,6 +18,26 @@ export const FONT_PRESETS = [
 
 export const DEFAULT_FONT = FONT_PRESETS[0].family;
 
+/**
+ * Return only the presets whose primary font face actually renders in this browser.
+ * Falls through the CSS fallback stack internally, but we only show it if the
+ * named font (not the generic fallback) is actually available.
+ */
+export function getAvailableFonts() {
+  if (typeof document === 'undefined') return FONT_PRESETS;
+  return FONT_PRESETS.filter(preset => {
+    // Generic families like 'cursive' always "resolve" — keep them
+    const generic = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy'];
+    const family = preset.family.trim();
+    if (generic.includes(family)) return true;
+    // Extract the first quoted or unquoted name
+    const match = family.match(/^"([^"]+)"|^([^,]+)/);
+    const name = (match[1] || match[2] || '').trim();
+    if (!name) return true;
+    return document.fonts.check(`16px "${name}"`);
+  });
+}
+
 /** Name registered for user-uploaded fonts. */
 export const CUSTOM_FONT_NAME = 'custom-hw-font';
 
@@ -49,7 +69,6 @@ export function extractFontPoints(letter, fontFamily) {
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, SIZE, SIZE);
 
-  ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
@@ -60,7 +79,13 @@ export function extractFontPoints(letter, fontFamily) {
     fontSize -= 4;
     ctx.font = `bold ${fontSize}px ${fontFamily}`;
   }
-  ctx.fillText(letter, SIZE / 2, SIZE / 2);
+
+  // Use strokeText to extract the outline/centerline — thinner target area
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = Math.max(2, fontSize * 0.04);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeText(letter, SIZE / 2, SIZE / 2);
 
   const data = ctx.getImageData(0, 0, SIZE, SIZE).data;
   const points = [];
