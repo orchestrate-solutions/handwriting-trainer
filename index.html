@@ -31,6 +31,12 @@
       Handwriting Trainer
     </div>
     <div class="header-actions">
+      <button class="studio-btn" id="studio-btn" aria-label="Template studio" title="Create custom templates">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+        </svg>
+      </button>
       <button class="history-btn" id="history-btn" aria-label="View practice history" title="Practice history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
@@ -127,6 +133,46 @@
         <button class="history-clear-btn" id="history-clear-btn">Clear All</button>
       </div>
       <div class="history-grid" id="history-grid"></div>
+    </div>
+  </div>
+
+  <!-- Template Studio panel -->
+  <div class="studio-panel" id="studio-panel" role="dialog" aria-label="Template studio" aria-hidden="true">
+    <div class="studio-panel__inner">
+      <div class="studio-panel__header">
+        <h2 class="studio-panel__title">Template Studio</h2>
+        <button class="studio-close" id="studio-close" aria-label="Close studio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="studio-panel__body">
+        <p class="studio-panel__desc">Draw your ideal letterform, then save it as a tracing template.</p>
+
+        <div class="studio-controls">
+          <div class="studio-label-input">
+            <label for="studio-label">Letter / Word</label>
+            <input type="text" id="studio-label" class="studio-input" placeholder="A" maxlength="20" autocomplete="off">
+          </div>
+          <div class="studio-actions">
+            <button class="studio-action-btn" id="studio-clear-btn">Clear</button>
+            <button class="studio-action-btn" id="studio-undo-btn">Undo</button>
+            <label class="studio-action-btn studio-import-btn" title="Import SVG file">
+              Import SVG
+              <input type="file" id="studio-svg-file" accept=".svg" hidden>
+            </label>
+            <button class="studio-action-btn studio-save-btn" id="studio-save-btn">Save Template</button>
+          </div>
+        </div>
+
+        <div class="studio-saved">
+          <h3 class="studio-saved__title">Saved Templates</h3>
+          <div class="studio-saved__grid" id="studio-saved-grid"></div>
+        </div>
+      </div>
     </div>
   </div>
 

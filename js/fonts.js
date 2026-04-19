@@ -49,7 +49,7 @@ const _cache = new Map();
  * Operates in-place on a Uint8Array of 0/1 values (width × height).
  * Returns the same array, mutated.
  */
-function thinZhangSuen(img, w, h) {
+export function thinZhangSuen(img, w, h) {
   const idx = (r, c) => r * w + c;
   let changed = true;
 

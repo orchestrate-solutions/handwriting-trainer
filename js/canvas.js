@@ -36,6 +36,12 @@ export class DrawingCanvas {
     // Show skeleton overlay (centerline dots)
     this.showSkeleton = false;
 
+    // Studio mode — draw without a template guide (for creating custom templates)
+    this.studioMode = false;
+
+    // Custom template points — when set, used instead of font extraction
+    this._customTemplatePoints = null;
+
     // Template points (in 0-100 space) for the current letter + font
     this.templatePoints = [];
 
@@ -169,6 +175,37 @@ export class DrawingCanvas {
     this.render();
   }
 
+  /** Enter studio mode — clean canvas for creating templates. */
+  enterStudio() {
+    this.studioMode = true;
+    this._customTemplatePoints = null;
+    this.templatePoints = [];
+    this.clear();
+  }
+
+  /** Exit studio mode — return to normal tracing. */
+  exitStudio() {
+    this.studioMode = false;
+    this._customTemplatePoints = null;
+    this.templatePoints = this._getTemplatePoints(this.currentLetter);
+    this.clear();
+  }
+
+  /**
+   * Set custom template points directly (from user-drawn or SVG templates).
+   * When set, these replace font-extracted points for scoring and skeleton display.
+   */
+  setCustomTemplatePoints(points) {
+    this._customTemplatePoints = points;
+    this.templatePoints = points;
+    this.render();
+  }
+
+  /** Get current user strokes (for saving as a template). */
+  getStrokes() {
+    return this.userStrokes.map(stroke => stroke.map(p => ({ x: p.x, y: p.y })));
+  }
+
   /** Export the current canvas state as a JPEG data URL. */
   toDataURL(type = 'image/jpeg', quality = 0.7) {
     return this.canvas.toDataURL(type, quality);
@@ -176,6 +213,8 @@ export class DrawingCanvas {
 
   /** Internal: get (cached) template points for a letter in the current font. */
   _getTemplatePoints(letter) {
+    // Use custom template points if set
+    if (this._customTemplatePoints) return this._customTemplatePoints;
     const key = `${letter}::${this.fontFamily}`;
     if (!this._pointCache.has(key)) {
       this._pointCache.set(key, this._extractFn(letter, this.fontFamily));
@@ -199,6 +238,9 @@ export class DrawingCanvas {
   }
 
   _updateScore() {
+    // No scoring in studio mode (creating templates)
+    if (this.studioMode) return;
+
     const allUserPts = this._getAllUserPoints();
     if (allUserPts.length === 0) {
       this.onScoreUpdate({ accuracy: 0, coverage: 0, smoothness: 0, overall: 0 });
@@ -280,6 +322,20 @@ export class DrawingCanvas {
   }
 
   _drawTemplate(ctx, s) {
+    // Studio mode: no font guide — just the skeleton if toggled
+    if (this.studioMode) {
+      if (this.showSkeleton && this.templatePoints.length > 0) {
+        ctx.fillStyle = 'rgba(255, 200, 60, 0.7)';
+        const r = Math.max(0.8, this.letterScale * s / 250);
+        for (const [tx, ty] of this.templatePoints) {
+          ctx.beginPath();
+          ctx.arc(this._t2c(tx), this._t2c(ty), r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      return;
+    }
+
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -331,18 +387,20 @@ export class DrawingCanvas {
     if (stroke.length < 2) return;
 
     const pts = stroke.map(p => [p.x, p.y]);
-    const dists = pointDistances(pts, this.templatePoints);
+    const useScoring = !this.studioMode && this.templatePoints.length > 0;
+    const dists = useScoring ? pointDistances(pts, this.templatePoints) : null;
     const strokeW = Math.max(1.5, this.letterScale * 3);
 
     for (let i = 1; i < stroke.length; i++) {
       const p0 = stroke[i - 1];
       const p1 = stroke[i];
-      const dist = dists[i];
 
       // Pressure-based width, scaled to letter size
       const width = strokeW + (p1.pressure || 0.5) * strokeW * 1.5;
 
-      ctx.strokeStyle = distanceColor(dist, this.difficulty.maxDist);
+      ctx.strokeStyle = useScoring
+        ? distanceColor(dists[i], this.difficulty.maxDist)
+        : '#90caf9';
       ctx.lineWidth = width;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';

@@ -1,10 +1,20 @@
 // Main app controller — wires canvas, drill picker, score display
 // Uses cup-ui components: <cup-slider>, <cup-button>
 import { DrawingCanvas } from './canvas.js';
-import { DRILLS, DEFAULT_DRILL } from './drills.js';
+import { DRILLS, DEFAULT_DRILL, CUSTOM_DRILL } from './drills.js';
 import { getAvailableFonts, loadCustomFont } from './fonts.js';
 import { DIFFICULTIES, DEFAULT_DIFFICULTY } from './difficulty.js';
 import { saveEntry, getHistory, clearHistory } from './history.js';
+import {
+  getCustomTemplates,
+  getCustomLabels,
+  getTemplateByLabel,
+  saveCustomTemplate,
+  deleteCustomTemplate,
+  skeletonFromStrokes,
+  skeletonFromSVG,
+  previewFromStrokes,
+} from './custom-templates.js';
 
 let canvas;
 let currentDrill = DEFAULT_DRILL;
@@ -62,6 +72,7 @@ function init() {
 function buildDrillNav() {
   const nav = document.getElementById('drill-nav');
   if (!nav) return;
+  // Built-in drills
   DRILLS.forEach(drill => {
     const btn = document.createElement('button');
     btn.className = 'drill-btn';
@@ -71,16 +82,44 @@ function buildDrillNav() {
     btn.addEventListener('click', () => selectDrill(drill));
     nav.appendChild(btn);
   });
+  // Custom drill button
+  const customBtn = document.createElement('button');
+  customBtn.className = 'drill-btn drill-btn--custom';
+  customBtn.textContent = '✨ ' + CUSTOM_DRILL.label;
+  customBtn.dataset.id = CUSTOM_DRILL.id;
+  customBtn.addEventListener('click', () => selectCustomDrill());
+  nav.appendChild(customBtn);
 }
 
 function selectDrill(drill) {
   saveCurrentToHistory();
   currentDrill = drill;
   currentItemIdx = 0;
+  // Exit custom mode if switching to a built-in drill
+  canvas.exitStudio();
+  canvas._customTemplatePoints = null;
   document.querySelectorAll('.drill-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.id === drill.id);
   });
   buildItemPicker(drill.items);
+  selectItem(0, { save: false });
+}
+
+function selectCustomDrill() {
+  saveCurrentToHistory();
+  const labels = getCustomLabels();
+  if (labels.length === 0) {
+    // No custom templates yet — open the studio
+    openStudio();
+    return;
+  }
+  CUSTOM_DRILL.items = labels;
+  currentDrill = CUSTOM_DRILL;
+  currentItemIdx = 0;
+  document.querySelectorAll('.drill-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.id === CUSTOM_DRILL.id);
+  });
+  buildItemPicker(CUSTOM_DRILL.items);
   selectItem(0, { save: false });
 }
 
@@ -172,7 +211,20 @@ function selectItem(idx, { save = true } = {}) {
   if (save) saveCurrentToHistory();
   currentItemIdx = idx;
   const item = currentDrill.items[idx];
-  canvas.setLetter(item);
+
+  // For custom drill, load template points from saved templates
+  if (currentDrill.isCustom) {
+    const tmpl = getTemplateByLabel(item);
+    if (tmpl) {
+      canvas.setLetter(item);
+      canvas.setCustomTemplatePoints(tmpl.points);
+    } else {
+      canvas.setLetter(item);
+    }
+  } else {
+    canvas._customTemplatePoints = null;
+    canvas.setLetter(item);
+  }
 
   document.querySelectorAll('.letter-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === idx);
@@ -234,6 +286,31 @@ function bindButtons() {
       skelBtn.setAttribute('aria-pressed', String(canvas.showSkeleton));
       skelBtn.classList.toggle('active', canvas.showSkeleton);
       canvas.render();
+    });
+  }
+
+  // Template studio
+  const studioBtn = document.getElementById('studio-btn');
+  const studioPanel = document.getElementById('studio-panel');
+  const studioClose = document.getElementById('studio-close');
+  const studioSave = document.getElementById('studio-save-btn');
+  const studioClear = document.getElementById('studio-clear-btn');
+  const studioUndo = document.getElementById('studio-undo-btn');
+  const studioSvg = document.getElementById('studio-svg-file');
+
+  if (studioBtn && studioPanel) {
+    studioBtn.addEventListener('click', () => openStudio());
+    studioClose.addEventListener('click', () => closeStudio());
+    studioPanel.addEventListener('click', e => {
+      if (e.target === studioPanel) closeStudio();
+    });
+    studioSave.addEventListener('click', () => saveStudioTemplate());
+    studioClear.addEventListener('click', () => canvas.clear());
+    studioUndo.addEventListener('click', () => canvas.undo());
+    studioSvg.addEventListener('change', () => {
+      const file = studioSvg.files[0];
+      if (file) importStudioSVG(file);
+      studioSvg.value = '';
     });
   }
 
@@ -389,4 +466,144 @@ function formatDate(ts) {
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
   return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+// --- Template Studio ---
+
+let studioOpen = false;
+
+function openStudio() {
+  const panel = document.getElementById('studio-panel');
+  if (!panel) return;
+  studioOpen = true;
+  canvas.enterStudio();
+  renderSavedTemplates();
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  document.getElementById('studio-label').focus();
+}
+
+function closeStudio() {
+  const panel = document.getElementById('studio-panel');
+  if (!panel) return;
+  studioOpen = false;
+  canvas.exitStudio();
+  panel.classList.remove('open');
+  panel.setAttribute('aria-hidden', 'true');
+}
+
+function saveStudioTemplate() {
+  const labelInput = document.getElementById('studio-label');
+  const label = (labelInput.value || '').trim();
+  if (!label) {
+    labelInput.focus();
+    return;
+  }
+
+  const strokes = canvas.getStrokes();
+  if (strokes.length === 0) return;
+
+  const points = skeletonFromStrokes(strokes);
+  const preview = previewFromStrokes(strokes);
+
+  saveCustomTemplate({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    label,
+    points,
+    preview,
+    source: 'drawn',
+    timestamp: Date.now(),
+  });
+
+  // Show confirmation flash
+  canvas.clear();
+  labelInput.value = '';
+  renderSavedTemplates();
+}
+
+async function importStudioSVG(file) {
+  if (!file) return;
+  const labelInput = document.getElementById('studio-label');
+  let label = (labelInput.value || '').trim();
+  if (!label) {
+    // Use filename (without extension) as label
+    label = file.name.replace(/\.[^.]+$/, '');
+    labelInput.value = label;
+  }
+
+  try {
+    const svgText = await file.text();
+    const points = await skeletonFromSVG(svgText);
+
+    // Render SVG as preview
+    const previewCanvas = document.createElement('canvas');
+    previewCanvas.width = 120;
+    previewCanvas.height = 120;
+    const pCtx = previewCanvas.getContext('2d');
+    pCtx.fillStyle = '#1a1a2e';
+    pCtx.fillRect(0, 0, 120, 120);
+    pCtx.fillStyle = '#90caf9';
+    for (const [x, y] of points) {
+      pCtx.fillRect(x / 100 * 120, y / 100 * 120, 1.5, 1.5);
+    }
+    const preview = previewCanvas.toDataURL('image/jpeg', 0.7);
+
+    saveCustomTemplate({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      label,
+      points,
+      preview,
+      source: 'svg',
+      timestamp: Date.now(),
+    });
+
+    labelInput.value = '';
+    renderSavedTemplates();
+  } catch (err) {
+    console.error('SVG import failed:', err);
+  }
+}
+
+function renderSavedTemplates() {
+  const grid = document.getElementById('studio-saved-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const templates = getCustomTemplates();
+  if (templates.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'history-empty';
+    empty.textContent = 'No templates saved yet.';
+    grid.appendChild(empty);
+    return;
+  }
+
+  for (const tmpl of templates) {
+    const card = document.createElement('div');
+    card.className = 'studio-template-card';
+
+    const img = document.createElement('img');
+    img.src = tmpl.preview;
+    img.alt = tmpl.label;
+    img.loading = 'lazy';
+    card.appendChild(img);
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'studio-template-card__label';
+    labelEl.textContent = tmpl.label;
+    card.appendChild(labelEl);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'studio-template-card__delete';
+    delBtn.textContent = '×';
+    delBtn.title = `Delete "${tmpl.label}"`;
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteCustomTemplate(tmpl.label);
+      renderSavedTemplates();
+    });
+    card.appendChild(delBtn);
+
+    grid.appendChild(card);
+  }
 }

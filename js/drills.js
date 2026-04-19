@@ -32,4 +32,15 @@ export const DRILLS = [
   },
 ];
 
+/**
+ * Custom drill — dynamically built from user-saved templates.
+ * Items are populated at runtime from custom-templates.js storage.
+ */
+export const CUSTOM_DRILL = {
+  id: 'custom',
+  label: 'Custom',
+  items: [],        // populated from saved templates at runtime
+  isCustom: true,   // flag so app.js knows to handle differently
+};
+
 export const DEFAULT_DRILL = DRILLS[0];
